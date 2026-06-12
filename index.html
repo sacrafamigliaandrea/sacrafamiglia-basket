@@ -212,14 +212,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .premio-testo strong{color:var(--arancio-scuro)}
 .premio-pie{display:flex;justify-content:center;gap:10px;margin-top:4px}
 
-/* ===== strato narrativo: banner delle zone ===== */
-.zona-banner{position:relative;margin:-14px -16px 14px;border-radius:16px 16px 0 0;overflow:hidden;height:128px}
-.zona-banner img{width:100%;height:100%;object-fit:cover;display:block}
-.zona-banner .vela{position:absolute;inset:0;background:linear-gradient(to top,rgba(154,28,19,.92),rgba(154,28,19,.12) 62%,rgba(154,28,19,0));display:flex;flex-direction:column;justify-content:flex-end;padding:10px 16px}
-.zona-banner .capitolo{font-family:'Fredoka',sans-serif;font-weight:700;color:#FFD9A8;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.zona-banner .racconto{color:#fff;font-size:.9rem;line-height:1.35;text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:680px}
-.bacheca .zona-banner .vela{background:linear-gradient(to top,rgba(168,84,12,.92),rgba(168,84,12,.12) 62%,rgba(168,84,12,0))}
-.bacheca .zona-banner .capitolo{color:#FFE9C2}
+/* ===== strato narrativo: intestazioni compatte delle zone ===== */
+.zona-cap{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.zona-thumb{width:62px;height:62px;border-radius:14px;object-fit:cover;flex:none;border:2.5px solid var(--oro);box-shadow:0 3px 8px rgba(120,70,30,.18)}
+.zona-cap-txt{flex:1;min-width:0}
+.zona-cap .capitolo{font-family:'Fredoka',sans-serif;font-weight:700;color:var(--arancio-scuro);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.zona-cap .zona-titolo{margin-bottom:3px}
+.zona-cap .racconto{font-size:.82rem;line-height:1.35;color:var(--grigio)}
+.bacheca .zona-cap .capitolo{color:#9A6a10}
 .vittoria-trofeo{width:100%;max-height:200px;object-fit:cover;border-radius:14px;border:3px solid var(--oro);margin-bottom:6px}
 </style>
 </head>
@@ -889,10 +889,14 @@ const ZONE_INFO={
   'Schemi':{ img:'4.jpg', pos:'50% 100%', cap:'Capitolo 3 · La lavagnetta', racconto:'Coach Bruno apre la lavagnetta. È il tempo degli schemi: ripeti le giocate e leggi la difesa.' },
   'Partita':{ img:'5.jpg', pos:'50% 50%', cap:'Capitolo 4 · Game day', racconto:'Si accendono le luci. Difensori in movimento e finestre di passaggio: porta la Sacra Famiglia al titolo.' }
 };
-function zonaBanner(z,zi){
-  const info=ZONE_INFO[z]; if(!info) return '';
-  return '<div class="zona-banner"><img src="'+info.img+'" alt="" style="object-position:'+info.pos+'" onerror="this.parentNode.style.display=\'none\'">'+
-    '<div class="vela"><div class="capitolo">'+info.cap+'</div><div class="racconto">'+info.racconto+'</div></div></div>';
+function zonaCap(z,zi){
+  const info=ZONE_INFO[z]||{};
+  const thumb=info.img ? '<img class="zona-thumb" src="'+info.img+'" alt="" style="object-position:'+(info.pos||'50% 50%')+'" onerror="this.style.display=\'none\'">' : '';
+  return '<div class="zona-cap">'+thumb+'<div class="zona-cap-txt">'+
+    (info.cap?'<div class="capitolo">'+info.cap+'</div>':'')+
+    '<div class="zona-titolo"><span class="zona-num">Zona '+(zi+1)+'</span> '+z+'</div>'+
+    (info.racconto?'<div class="racconto">'+info.racconto+'</div>':'')+
+    '</div></div>';
 }
 
 // ===== MAPPA / CAMPIONATO =====
@@ -903,7 +907,7 @@ function buildMappa(){
   zone.forEach((z,zi)=>{
     const lvs=LEVELS.filter(l=>l.zona===z);
     const card=document.createElement('div'); card.className='zona';
-    let h=zonaBanner(z,zi)+'<div class="zona-titolo"><span class="zona-num">Zona '+(zi+1)+'</span> '+z+'</div><div class="zona-griglia">';
+    let h=zonaCap(z,zi)+'<div class="zona-griglia">';
     lvs.forEach(lv=>{
       const sbloccato = docente || lv.id<=maxSbloccato;
       const completato = stelleLivello[lv.id]>0;
@@ -926,8 +930,11 @@ function buildMappa(){
   });
   // bacheca dei premi
   const bac=document.createElement('div'); bac.className='bacheca';
-  let bh='<div class="zona-banner"><img src="8.jpg" alt="" style="object-position:50% 38%" onerror="this.parentNode.style.display=\'none\'"><div class="vela"><div class="capitolo">La bacheca dei trofei</div><div class="racconto">Ogni zona conquistata sblocca una pagina sui valori dello sport.</div></div></div>'+
-    '<div class="zona-titolo"><span class="zona-num">Premi</span> Lo spogliatoio dei valori</div><div class="premio-griglia">';
+  let bh='<div class="zona-cap"><img class="zona-thumb" src="8.jpg" alt="" style="object-position:50% 38%" onerror="this.style.display=\'none\'"><div class="zona-cap-txt">'+
+    '<div class="capitolo">La bacheca dei trofei</div>'+
+    '<div class="zona-titolo"><span class="zona-num">Premi</span> Lo spogliatoio dei valori</div>'+
+    '<div class="racconto">Ogni zona conquistata sblocca una pagina sui valori dello sport.</div>'+
+    '</div></div><div class="premio-griglia">';
   PREMI.forEach((p,i)=>{
     const ok=premioSbloccato(i);
     bh+='<div class="trofeo'+(ok?'':' bloccato')+'" data-premio="'+i+'">';
