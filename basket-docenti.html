@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach! — Scheda didattica per il docente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rosso:#C8281E; --rosso-chiaro:#E0584D; --arancio:#E07B1E; --arancio-scuro:#A8540C;
+  --blu:#1F3A63; --carta:#FBF6EE; --inchiostro:#241A12; --grigio:#6f6356;
+  --bordo:#E2D6C2; --crema:#FBEEDC;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--carta);color:var(--inchiostro);font-family:'Atkinson Hyperlegible',system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+
+header{background:linear-gradient(150deg,#9A1C13 0%,#C8281E 55%,#E0584D 100%);color:#fff;padding:42px 0 34px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-60px;bottom:-90px;width:280px;height:280px;border:30px solid rgba(255,255,255,.08);border-radius:50%}
+header .eyebrow{font-family:'Fredoka',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;color:#FFD9A8;font-weight:600}
+header h1{font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(2rem,5vw,3.1rem);margin:.1em 0 .15em;line-height:1.05}
+header .sub{font-size:1.05rem;color:#FBE3DF;max-width:600px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.30);border-radius:999px;padding:5px 13px;font-size:.82rem;font-family:'Fredoka',sans-serif;font-weight:500}
+
+.snapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:-28px auto 0;position:relative;z-index:2}
+.snap{background:#fff;border:1px solid var(--bordo);border-radius:14px;padding:16px 14px;box-shadow:0 8px 22px rgba(200,40,30,.12)}
+.snap .n{font-family:'Fredoka',sans-serif;font-weight:700;font-size:2rem;color:var(--rosso);line-height:1}
+.snap .l{font-size:.82rem;color:var(--grigio);margin-top:3px}
+
+section{padding:30px 0 6px}
+h2{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.5rem;color:var(--rosso);margin:.2em 0 .1em;display:flex;align-items:center;gap:11px}
+h2 .tag{font-family:'Atkinson Hyperlegible',sans-serif;font-weight:700;font-size:.72rem;color:#fff;background:var(--arancio);border-radius:6px;padding:3px 8px;letter-spacing:.04em}
+.lead{color:var(--grigio);max-width:680px;margin:.3em 0 1.2em}
+
+.obj{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:#fff;border:1px solid var(--bordo);border-left:4px solid var(--rosso);border-radius:0 12px 12px 0;padding:15px 17px}
+.card.arancio{border-left-color:var(--arancio)}
+.card.blu{border-left-color:var(--blu)}
+.card h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.02rem;margin:0 0 .35em;color:var(--inchiostro)}
+.card p{margin:0;font-size:.92rem;color:#444}
+
+.zone{border-left:3px solid var(--crema);margin-left:8px;padding-left:0}
+.zona{position:relative;padding:0 0 18px 26px}
+.zona::before{content:"";position:absolute;left:-9px;top:3px;width:15px;height:15px;border-radius:50%;background:var(--rosso);border:3px solid var(--carta)}
+.zona.z2::before{background:var(--rosso-chiaro)} .zona.z3::before{background:var(--arancio)} .zona.z4::before{background:var(--arancio-scuro)}
+.zona .zt{font-family:'Fredoka',sans-serif;font-weight:600;color:var(--rosso);font-size:1.05rem}
+.zona .zr{font-size:.8rem;color:var(--grigio);font-family:'Fredoka',sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.zona .zd{font-size:.93rem;color:#3a3a3a;margin-top:2px}
+.concept{display:inline-block;background:var(--crema);color:var(--arancio-scuro);font-family:'Fredoka',sans-serif;font-weight:600;font-size:.78rem;border-radius:6px;padding:2px 9px;margin:5px 5px 0 0}
+
+.cmd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.cmd{display:flex;gap:12px;align-items:baseline;background:#fff;border:1px solid var(--bordo);border-radius:10px;padding:11px 14px}
+.cmd code{font-family:'Fredoka',monospace;background:var(--inchiostro);color:#FFD9A8;border-radius:5px;padding:2px 9px;font-size:.86rem;font-weight:500;white-space:nowrap}
+.cmd span{font-size:.9rem;color:#444}
+
+.box{background:#fff;border:1px solid var(--bordo);border-radius:14px;padding:18px 20px;margin-top:8px}
+.box.arancio{background:var(--crema);border-color:#EFD8B6}
+.box.rosso{background:#FCE7E3;border-color:#F0C7C1}
+ul.clean{list-style:none;padding:0;margin:8px 0 0}
+ul.clean li{position:relative;padding-left:24px;margin-bottom:9px;font-size:.94rem}
+ul.clean li::before{content:"";position:absolute;left:0;top:5px;width:11px;height:11px;border-radius:50%;background:var(--arancio)}
+ul.clean.rosso li::before{background:var(--rosso)}
+
+table.val{width:100%;border-collapse:collapse;margin-top:6px;font-size:.92rem;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--bordo)}
+table.val th{background:var(--rosso);color:#fff;text-align:left;padding:10px 14px;font-family:'Fredoka',sans-serif;font-weight:500;font-size:.88rem}
+table.val td{padding:10px 14px;border-top:1px solid var(--bordo);vertical-align:top}
+table.val tr:nth-child(even) td{background:#FBF7F0}
+
+.spec{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.spec .s{background:#fff;border:1px solid var(--bordo);border-radius:12px;padding:14px}
+.spec .s .st{font-family:'Fredoka',sans-serif;font-weight:600;color:var(--arancio-scuro);font-size:.95rem;margin-bottom:3px}
+.spec .s p{margin:0;font-size:.87rem;color:#444}
+
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.cta a{font-family:'Fredoka',sans-serif;font-weight:500;text-decoration:none;font-size:.92rem;border-radius:10px;padding:11px 20px}
+.cta a.primary{background:var(--rosso);color:#fff}
+.cta a.ghost{background:#fff;color:var(--rosso);border:1.5px solid var(--rosso)}
+
+footer{margin-top:34px;background:var(--inchiostro);color:#D8CCBC;padding:24px 0;font-size:.85rem}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+footer strong{color:#fff;font-family:'Fredoka',sans-serif}
+
+@media (max-width:680px){
+  .snapshot{grid-template-columns:1fr 1fr}
+  .obj,.cmd-grid,.spec{grid-template-columns:1fr}
+}
+@media print{
+  body{background:#fff}
+  header{background:#C8281E !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .snap,.card,.box,.spec .s,table.val,.cmd{break-inside:avoid}
+  section{break-inside:avoid-page}
+  .cta,header::after{display:none}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow"><a href="index.html" style="color:#FFD9A8;text-decoration:none">&larr; Torna al gioco</a> &nbsp;·&nbsp; Scheda didattica · serie del coding · gioco 4</div>
+    <h1>Coach!</h1>
+    <p class="sub">Un gioco-web per imparare il pensiero computazionale vestendo i panni dell'allenatore: si istruiscono i giocatori con i comandi giusti, si aggirano gli avversari e si organizzano i tiri a canestro.</p>
+    <div class="chips">
+      <span class="chip">Primaria · Secondaria I grado</span>
+      <span class="chip">Coding &amp; pensiero computazionale</span>
+      <span class="chip">Geometria intuitiva</span>
+      <span class="chip">Gioco di squadra</span>
+      <span class="chip">Single-file · nessun account</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="snapshot">
+    <div class="snap"><div class="n">16</div><div class="l">livelli in 4 zone</div></div>
+    <div class="snap"><div class="n">4</div><div class="l">concetti di coding</div></div>
+    <div class="snap"><div class="n">7</div><div class="l">comandi del linguaggio</div></div>
+    <div class="snap"><div class="n">★★★</div><div class="l">le tre palle d'oro</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section>
+  <h2>In una frase</h2>
+  <p class="lead">Lo studente è il <strong>coach</strong> della squadra: non scende in campo, ma scrive un piccolo programma — palleggia, smarca, passa, tira, aspetta, ripeti, decidi con una condizione — che porta la palla a canestro evitando gli avversari. Il punteggio non è un voto astratto: sono le <strong>mosse</strong>, cioè l'eleganza della soluzione. La strategia di gioco e l'efficienza del codice coincidono.</p>
+</section>
+
+<section>
+  <h2><span class="tag">PERCHÉ</span> Obiettivi di apprendimento</h2>
+  <p class="lead">Il gioco lavora su piani che si rinforzano a vicenda: si impara a programmare risolvendo una situazione di gioco concreta, vicina al vissuto e alle passioni degli studenti.</p>
+  <div class="obj">
+    <div class="card">
+      <h3>Pensiero computazionale</h3>
+      <p>Sequenza, attesa temporizzata (<code>wait</code>), iterazione (<code>repeat</code>) e selezione (<code>if</code>): i quattro mattoni del coding, introdotti uno alla volta e sempre al servizio di un'azione di gioco.</p>
+    </div>
+    <div class="card arancio">
+      <h3>Pianificazione e problem solving</h3>
+      <p>Prima di scrivere bisogna leggere il campo: dove sono gli avversari, quale corridoio è libero, in che ordine muoversi. Si progetta uno schema, non si tira a indovinare.</p>
+    </div>
+    <div class="card blu">
+      <h3>Geometria intuitiva</h3>
+      <p>Distanza dal canestro, linea di tiro libera, linea di passaggio sgombra: lo studente ragiona su punti, distanze e segmenti senza formalismi, vedendone subito l'effetto.</p>
+    </div>
+    <div class="card arancio">
+      <h3>Cooperazione e ruoli</h3>
+      <p>Dalla zona 2 il singolo non basta: bisogna smarcare un compagno, far girare la palla, creare il due-contro-uno. Il coding diventa coordinamento di una squadra.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">COSA</span> Il linguaggio PLAY</h2>
+  <p class="lead">Sette comandi in inglese, introdotti gradualmente — la stessa scelta dell'inglese fatta ne <em>Il Fontaniere</em>. La sintassi essenziale rende visibile la logica; i messaggi d'errore sono in italiano e spiegano cosa correggere, sempre in chiave cestistica.</p>
+  <div class="cmd-grid">
+    <div class="cmd"><code>dribble up</code><span>palleggia di un passo (up/down/left/right)</span></div>
+    <div class="cmd"><code>move p2 left</code><span>sposta un compagno <em>senza</em> palla per smarcarlo</span></div>
+    <div class="cmd"><code>pass p2</code><span>passa la palla a un compagno</span></div>
+    <div class="cmd"><code>shoot</code><span>tira a canestro</span></div>
+    <div class="cmd"><code>wait</code><span>aspetta un istante (gli avversari si muovono)</span></div>
+    <div class="cmd"><code>repeat 3</code><span>ripete un blocco (rientro di 2 spazi)</span></div>
+    <div class="cmd"><code>if open / blocked / clear p2</code><span>decide leggendo la difesa</span></div>
+  </div>
+  <div class="box arancio" style="margin-top:14px">
+    <strong>Le regole del campo.</strong> Il tiro entra solo se si è abbastanza vicini al canestro <em>e</em> la linea verso il ferro è libera da avversari; un passaggio si completa solo se la linea verso il compagno è sgombra; andare addosso a un avversario fa perdere la palla. Tre regole geometriche semplici che lo studente verifica a colpo d'occhio, spostando i giocatori di una casella alla volta.
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">COME</span> Progressione in 4 zone</h2>
+  <p class="lead">Sedici livelli a difficoltà crescente. Ogni zona introduce un concetto nuovo e lo consolida prima del successivo: una struttura a spirale che riprende e amplia.</p>
+  <div class="zone">
+    <div class="zona z1">
+      <div class="zr">livelli 1–4 · Riscaldamento</div>
+      <div class="zt">Palleggio e tiro</div>
+      <div class="zd">Sequenza pura: <code>dribble</code> e <code>shoot</code>. Si scopre la distanza di tiro, ci si posiziona per l'angolo giusto, si impara ad aggirare un avversario invece di sfondarlo.</div>
+      <span class="concept">sequenza</span><span class="concept">geometria del tiro</span>
+    </div>
+    <div class="zona z2">
+      <div class="zr">livelli 5–8 · Squadra</div>
+      <div class="zt">Passaggio e smarcamento</div>
+      <div class="zd">Entrano <code>pass</code> e <code>move</code>: servire un compagno libero, spostarlo per smarcarlo, far girare la palla per battere la difesa, costruire il due-contro-uno.</div>
+      <span class="concept">collaborazione</span><span class="concept">linee di passaggio</span>
+    </div>
+    <div class="zona z3">
+      <div class="zr">livelli 9–12 · Schemi</div>
+      <div class="zt">Cicli e condizioni</div>
+      <div class="zd">L'iterazione (<code>repeat</code>) per risalire il campo con meno righe; la condizione (<code>if open/blocked</code>) per leggere la difesa: «se il tiro è libero tira, altrimenti scarica».</div>
+      <span class="concept">repeat</span><span class="concept">if · lettura difesa</span>
+    </div>
+    <div class="zona z4">
+      <div class="zr">livelli 13–16 · Partita</div>
+      <div class="zt">Tempismo e sintesi</div>
+      <div class="zd">Avversari <em>in movimento</em>: serve <code>wait</code> per cogliere l'attimo in cui la linea si libera. Il finale chiede due canestri in sequenza, combinando tutto.</div>
+      <span class="concept">wait · tempismo</span><span class="concept">sintesi</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">METODO</span> Scaffolding: dai comandi alle indicazioni</h2>
+  <p class="lead">È il cuore didattico del gioco e la richiesta da cui è nato. La consegna cambia <strong>forma</strong> man mano che lo studente acquista autonomia, secondo il modello del <em>Gradual Release of Responsibility</em>.</p>
+  <div class="box rosso">
+    <ul class="clean rosso">
+      <li><strong>Zone 1–2 (livelli 1–8) — consegne con i comandi.</strong> Il testo nomina esplicitamente le istruzioni da usare («usa <code>dribble up</code> due volte, poi <code>shoot</code>»). Lo studente impara la sintassi imitando un modello sicuro.</li>
+      <li><strong>Zone 3–4 (livelli 9–16) — consegne con le sole indicazioni.</strong> Una volta familiarizzato, riceve solo l'obiettivo strategico («aspetta che la linea si liberi, servi il compagno e fallo segnare»): deve scegliere <em>da sé</em> i comandi. Il ponteggio è tolto.</li>
+      <li><strong>Coach Bruno</strong> accompagna ogni livello con una battuta e un «Sai che...»: dà un volto al compito e tiene viva la motivazione, senza mai svelare la soluzione.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">VALUTARE</span> Dati per la rubrica</h2>
+  <p class="lead">Al termine di ogni livello il gioco restituisce dati oggettivi, utili come evidenze per una valutazione di processo più che di prodotto.</p>
+  <table class="val">
+    <tr><th>Indicatore</th><th>Cosa misura</th><th>Come leggerlo</th></tr>
+    <tr><td><strong>Canestri segnati</strong></td><td>se l'obiettivo è stato raggiunto</td><td>competenza di base: l'azione si conclude a canestro?</td></tr>
+    <tr><td><strong>Mosse usate</strong></td><td>efficienza della soluzione</td><td>vicino allo «schema perfetto» = padronanza; mosse di troppo rivelano un percorso poco pianificato</td></tr>
+    <tr><td><strong>Tre palle d'oro</strong></td><td>punteggio sintetico (1–3)</td><td>tre palle = soluzione segnata con il minor numero di mosse</td></tr>
+  </table>
+  <div class="box" style="margin-top:14px">
+    <strong>Spunti osservabili.</strong> Per la rubrica si possono leggere: <em>uso dell'iterazione</em> dove l'azione si ripete, <em>uso corretto della condizione</em> per leggere la difesa, <em>capacità di pianificare il percorso</em> prima di scrivere, <em>tempismo</em> contro gli avversari in movimento e <em>autonomia crescente</em> man mano che le consegne smettono di citare i comandi.
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">METODO</span> Inclusione e accessibilità</h2>
+  <div class="spec">
+    <div class="s"><div class="st">Aiuti a dissolvenza</div><p>Dai comandi espliciti dei primi livelli alle sole indicazioni dei livelli avanzati: il ponteggio si ritira man mano che cresce l'autonomia.</p></div>
+    <div class="s"><div class="st">Errori che insegnano</div><p>Mai un secco "sbagliato": gli avvisi spiegano in termini di gioco cosa è successo ("tiro stoppato: un difensore era sulla linea, cerca un angolo libero").</p></div>
+    <div class="s"><div class="st">Accessibilità</div><p>Font ad alta leggibilità, grafica vettoriale, contrasto curato, animazioni che rispettano la riduzione del movimento. Funziona da tastiera e su iPad.</p></div>
+    <div class="s"><div class="st">Ritmo personale</div><p>Nessun timer reale: si ragiona con calma. Premuto "Via!", la simulazione mostra i giocatori muoversi e la palla volare a canestro.</p></div>
+    <div class="s"><div class="st">Riprova senza penalità</div><p>"Pulisci" azzera l'editor, "Rigioca" ricomincia il livello. Provare e correggere è parte del metodo, non un fallimento.</p></div>
+    <div class="s"><div class="st">Privacy by design</div><p>Nessun login, nessun dato personale, nessun localStorage sui Mac condivisi: a ogni riaccesso si riparte. La progressione si trasmette con un codice-partita (es. ASSIST).</p></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="tag">IN CLASSE</span> Come usarlo</h2>
+  <div class="box arancio">
+    <ul class="clean">
+      <li><strong>Laboratorio guidato:</strong> il primo livello insieme alla LIM (modeling), poi a coppie sui dispositivi. La discussione sui diversi modi di risolvere lo stesso schema è il cuore dell'attività.</li>
+      <li><strong>A staffetta:</strong> il codice-partita permette di sbloccare un livello specifico per gruppi a velocità diverse, o di riprendere da dove si era arrivati la volta prima. Ogni vittoria svela il codice del livello successivo.</li>
+      <li><strong>Ponte interdisciplinare:</strong> educazione fisica (fondamentali del basket, ruoli, schemi), matematica (distanze, coordinate sulla griglia, segmenti e linee di vista), educazione civica (gioco di squadra e rispetto delle regole).</li>
+      <li><strong>Modalità coach:</strong> cinque tocchi sul pallone del logo sbloccano tutti i livelli e attivano il pulsante "Soluzione", per preparare la lezione. Si può anche aprire un livello con il link diretto <code>?livello=N</code>.</li>
+    </ul>
+  </div>
+  <div class="cta">
+    <a class="primary" href="index.html">Apri il gioco</a>
+    <a class="ghost" href="javascript:window.print()">Stampa questa scheda</a>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div><strong>Scuola Sacra Famiglia</strong> · Orzinuovi (BS) · sacrafamiglia.edu.it</div>
+    <div>© 2026 Andrea Cerioli — Animatore Digitale · serie del coding · gioco 4</div>
+  </div>
+</footer>
+
+</body>
+</html>

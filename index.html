@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta property="og:title" content="Coach! — il gioco di coding del basket">
+<meta property="og:description" content="Diventa l'allenatore: scrivi i comandi, smarca i giocatori, salta gli avversari e segna a canestro. 16 livelli da sbloccare!">
+<meta property="og:type" content="website">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Coach! — il coding del basket</title>
+<!--
+  COACH! — coding testuale (linguaggio PLAY, inglese): lo studente impersona
+  un allenatore che istruisce i giocatori e organizza i tiri a canestro.
+  Gli ostacoli sono gli avversari. Quarto gioco della serie dopo
+  Controcorrente, Rocca Cifrata e Il Fontaniere. Progettazione A. Cerioli.
+  Single file, vanilla HTML/CSS/JS. Motore verificato in Node.
+  Nessun localStorage (Mac di laboratorio condivisi): progressi in memoria,
+  azzerati a ogni riaccesso, piu' codici di avanzamento.
+  Scaffolding: zone 1-2 con comandi espliciti nelle consegne; zone 3-4 solo
+  indicazioni, senza comandi. Sblocco docente: 5 tap sul pallone del logo.
+  Deep link: ?livello=N. Musica YouTube opzionale (lista MUSICHE).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rosso:#C8281E; --rosso-scuro:#9A1C13; --rosso-chiaro:#FBE3DF;
+  --blu:#1F3A63; --blu-scuro:#0e1d35;
+  --arancio:#E07B1E; --arancio-scuro:#A8540C;
+  --legno:#C8884B; --crema:#FBF3E6; --sabbia:#F3E9DA; --bordo:#E2CFB4;
+  --oro:#E0A21E; --inchiostro:#241A12; --grigio:#8a7d6a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Atkinson Hyperlegible',sans-serif;background:var(--sabbia);color:var(--inchiostro);overflow:hidden}
+h1,h2,h3,.display{font-family:'Fredoka',sans-serif;font-weight:600}
+button{font-family:'Fredoka',sans-serif;cursor:pointer;border:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--arancio);outline-offset:2px}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.attiva{display:flex}
+.spazio{flex:1}
+
+/* ===== SPLASH ===== */
+#splash{align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 18%,#E89B4F 0%,#C8884B 38%,#8a4f22 100%)}
+#splash .pannello{position:relative;background:rgba(28,16,8,.62);border:2px solid rgba(255,255,255,.18);border-radius:22px;padding:26px 30px;max-width:760px;text-align:left}
+.hero-img{display:block;width:100%;max-height:300px;object-fit:cover;border-radius:16px;border:3px solid rgba(255,255,255,.28);box-shadow:0 10px 26px rgba(0,0,0,.4);margin-bottom:16px}
+#splash .occhiello{color:#FFD9A8;font-family:'Fredoka',sans-serif;font-size:1.02rem;margin-bottom:2px;letter-spacing:.02em}
+#splash h1{font-size:clamp(2.1rem,6vw,3.4rem);color:#fff;font-weight:700;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+#splash p{color:#F4E7D6;margin-top:12px;line-height:1.5}
+.splash-coach{display:flex;align-items:center;gap:12px;margin:16px 0 4px}
+.splash-coach .av{flex:none}
+.splash-coach .fumetto{position:relative;background:rgba(255,255,255,.96);color:#5A1410;border-radius:14px;padding:10px 14px;font-size:.95rem;line-height:1.45}
+.splash-coach .fumetto::before{content:'';position:absolute;left:-8px;top:22px;border:8px solid transparent;border-right-color:rgba(255,255,255,.96);border-left:0}
+.btn-big{margin-top:20px;background:var(--rosso);color:#fff;font-size:1.2rem;font-weight:600;padding:14px 38px;border-radius:999px;box-shadow:0 4px 0 var(--rosso-scuro);transition:transform .08s}
+.btn-big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--rosso-scuro)}
+.splash-foot{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16)}
+.splash-foot img{height:48px;border-radius:8px;background:#fff;padding:3px}
+.splash-foot .cr{color:#E7D6C2;font-size:.74rem;line-height:1.45;font-family:'Fredoka',sans-serif}
+.splash-foot .cr strong{color:#fff}
+
+/* ===== TOP BAR ===== */
+.testa{display:flex;align-items:center;gap:12px;padding:9px 16px;background:var(--rosso);color:#fff;flex-wrap:wrap}
+.testa h1{font-size:1.18rem}
+.logo-ball{width:34px;height:34px;border-radius:50%;cursor:pointer;flex:none;border:2px solid #fff;object-fit:cover;background:var(--arancio)}
+.btn-testa{background:rgba(255,255,255,.94);color:var(--rosso-scuro);border-radius:999px;padding:7px 16px;font-size:.9rem;font-weight:600}
+.btn-musica{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:50%;background:rgba(255,255,255,.18);border:1.6px solid rgba(255,255,255,.55)}
+.btn-musica svg{display:block}
+.btn-musica.on{background:#fff;border-color:#fff}
+.badge-docente{background:var(--oro);color:#4a3500;border-radius:999px;padding:6px 14px;font-weight:600;font-size:.85rem;display:none}
+
+/* ===== MAPPA ===== */
+#mappa{background:var(--sabbia)}
+.mappa-corpo{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:0 0 18px}
+.banner-int{width:100%;max-height:140px;object-fit:cover;display:block;border-bottom:4px solid var(--rosso)}
+.mappa-inner{width:min(1000px,100%);padding:16px;display:flex;flex-direction:column;gap:16px}
+.zona{background:#fff;border:2px solid var(--bordo);border-radius:18px;padding:14px 16px;box-shadow:0 6px 18px rgba(120,70,30,.10)}
+.zona-titolo{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;font-weight:700;color:var(--rosso-scuro);font-size:1.05rem;margin-bottom:12px}
+.zona-num{background:var(--rosso);color:#fff;border-radius:8px;font-size:.78rem;padding:3px 9px}
+.zona-griglia{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:560px){.zona-griglia{grid-template-columns:repeat(2,1fr)}}
+.nodo{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;padding:6px 4px;border-radius:14px}
+.nodo .palla{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.5rem;color:#fff;position:relative;box-shadow:0 4px 10px rgba(0,0,0,.2);background:radial-gradient(circle at 38% 32%,#F09A4A,#E07B1E 60%,#A8540C)}
+.nodo .palla::before{content:'';position:absolute;inset:0;border-radius:50%;background:
+  linear-gradient(#8a3b10,#8a3b10) center/2px 100% no-repeat,
+  linear-gradient(#8a3b10,#8a3b10) center/100% 2px no-repeat;opacity:.5}
+.nodo.bloccato .palla{background:#b9ad99;color:#fff;box-shadow:none}
+.nodo.bloccato{cursor:default}
+.nodo.bloccato .palla::before{opacity:.25}
+.nodo.completato .palla{background:radial-gradient(circle at 38% 32%,#5BD487,#27A85B 60%,#177a3e)}
+.nodo:not(.bloccato){cursor:pointer;transition:transform .12s}
+.nodo:not(.bloccato):hover{transform:translateY(-3px)}
+.nodo.corrente .palla{box-shadow:0 0 0 4px var(--oro),0 4px 10px rgba(0,0,0,.2);animation:pulsa 1.5s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 7px rgba(224,162,30,.5),0 4px 10px rgba(0,0,0,.2)}}
+.nodo .nome{font-size:.74rem;text-align:center;line-height:1.15;color:var(--inchiostro);max-width:84px}
+.nodo .lucch{position:absolute;width:20px;height:20px}
+.nodo .stelline{display:flex;gap:2px;height:12px}
+.nodo .stelline i{width:10px;height:10px;border-radius:50%;background:#d8cdb8;display:inline-block}
+.nodo .stelline i.on{background:var(--arancio)}
+.mappa-piedi{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.codice-box{display:flex;gap:8px;align-items:center;background:#fff;border:2px solid var(--bordo);border-radius:999px;padding:5px 6px 5px 16px}
+.codice-box input{border:none;background:none;font-family:'Fredoka',sans-serif;font-size:.95rem;text-transform:uppercase;width:170px;color:var(--inchiostro)}
+.codice-box button{background:var(--rosso);color:#fff;border-radius:999px;padding:7px 16px;font-weight:600}
+
+/* ===== LIVELLO ===== */
+#livello{background:var(--sabbia)}
+.lv-testa{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--rosso);color:#fff;flex-wrap:wrap}
+.lv-testa .titolo-lv{font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.05rem}
+.lv-testa .zona-lv{font-size:.78rem;opacity:.85;font-family:'Fredoka',sans-serif}
+.lv-corpo{flex:1;display:grid;grid-template-columns:50% 50%;min-height:0}
+.colonna-stage{display:flex;flex-direction:column;min-height:0;border-right:2px solid var(--bordo);background:#fff}
+.consegna{padding:10px 14px;background:var(--rosso-chiaro);border-bottom:2px solid var(--bordo);font-size:.88rem;line-height:1.4;overflow:auto;max-height:170px;flex:none}
+.consegna strong{color:var(--rosso-scuro)}
+.court-head{padding:6px 14px;background:#fff;border-bottom:2px solid var(--bordo);font-family:'Fredoka',sans-serif;font-size:.9rem;color:var(--rosso-scuro);text-align:center}
+.court-head strong{font-size:1.05rem}
+.stage-box{flex:1;min-height:240px;position:relative;display:flex;align-items:stretch;justify-content:center;background:#6c4a2a}
+.stage-box svg{width:100%;height:100%}
+.colonna-codice{display:flex;flex-direction:column;min-height:0;background:var(--crema)}
+.palette{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;border-bottom:2px solid var(--bordo);background:#fff;align-items:center}
+.eti-pal{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--grigio);width:100%;font-family:'Fredoka',sans-serif}
+.chip-cmd{background:var(--rosso-chiaro);color:var(--rosso-scuro);border:1.5px solid var(--rosso);border-radius:8px;padding:4px 10px;font-size:.85rem;font-family:Menlo,Consolas,monospace;font-weight:600}
+.chip-cmd:active{background:var(--rosso);color:#fff}
+.chip-cmd.nuovo{background:#FFF1DC;border-color:var(--arancio);color:var(--arancio-scuro)}
+.editor-area{flex:1;display:flex;min-height:0}
+.numeri{background:#EFE2CB;color:#A89878;font-family:Menlo,Consolas,monospace;font-size:.95rem;line-height:1.5;padding:12px 6px 12px 0;text-align:right;min-width:38px;user-select:none;overflow:hidden;white-space:pre}
+#codice{flex:1;border:none;resize:none;background:var(--crema);font-family:Menlo,Consolas,monospace;font-size:.95rem;line-height:1.5;padding:12px;color:var(--inchiostro);white-space:pre;overflow:auto}
+.barra-azioni{display:flex;gap:8px;padding:10px 12px;border-top:2px solid var(--bordo);background:#fff;align-items:center;flex-wrap:wrap}
+.btn-esegui{background:var(--arancio);color:#fff;font-size:1.05rem;font-weight:600;padding:10px 26px;border-radius:12px;box-shadow:0 3px 0 var(--arancio-scuro)}
+.btn-esegui:active{transform:translateY(2px);box-shadow:0 1px 0 var(--arancio-scuro)}
+.btn-esegui[disabled]{opacity:.55;box-shadow:none}
+.btn-sec{background:#fff;border:2px solid var(--bordo);color:var(--inchiostro);padding:9px 16px;border-radius:12px;font-weight:500;font-size:.9rem}
+.btn-sol{background:#fff;border:2px dashed var(--oro);color:var(--arancio-scuro);padding:9px 14px;border-radius:12px;font-weight:600;font-size:.85rem;display:none}
+.feedback{padding:10px 14px;font-size:.9rem;line-height:1.4;border-top:2px solid var(--bordo);display:none;max-height:30%;overflow:auto}
+.feedback.rosso{display:block;background:#FCE7E3;color:#7a1810;border-top-color:var(--rosso)}
+.feedback.verde{display:block;background:#E6F6EC;color:#177a3e;border-top-color:#27A85B}
+
+/* parla / coach */
+.parla{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
+.parla .av{flex:none}
+.parla .nome-coach{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:.78rem;color:var(--rosso);margin-bottom:2px}
+.coach-av{border-radius:50%;background:#FBEAD2;box-shadow:0 2px 6px rgba(0,0,0,.18);object-fit:cover;display:inline-block;vertical-align:middle}
+.fact{margin-top:9px;padding:8px 11px;background:#FFF6E6;border-left:3px solid var(--oro);border-radius:6px;font-size:.83rem;line-height:1.55}
+.fact strong{color:var(--arancio-scuro)}
+.hint{margin-top:8px;padding:7px 10px;background:#EEF3FB;border-left:3px solid var(--blu);border-radius:6px;font-size:.82rem;line-height:1.55;color:#1c3354}
+.consegna code,.scheda code{background:#241A12;color:#FFD9A8;border-radius:5px;padding:1px 6px;font-size:.8rem;font-family:Menlo,Consolas,monospace;white-space:nowrap}
+
+/* token animation */
+#court .tok{transition:transform .42s cubic-bezier(.45,.05,.35,1)}
+#court .tok.ball{transition:transform .40s cubic-bezier(.3,.7,.3,1)}
+#court .noanim .tok{transition:none !important}
+.court-pop{opacity:0;font-family:'Fredoka',sans-serif;font-size:30px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#C8281E;stroke-width:5px;pointer-events:none;transition:opacity .18s}
+.court-pop.show{opacity:1}
+
+/* overlay */
+.overlay{position:absolute;inset:0;background:rgba(28,16,8,.66);display:none;align-items:center;justify-content:center;z-index:40;padding:18px}
+.overlay.attiva{display:flex}
+.scheda{background:var(--crema);border-radius:20px;max-width:560px;width:100%;max-height:92%;overflow:auto;padding:26px 28px;border:3px solid var(--rosso);box-shadow:0 16px 60px rgba(0,0,0,.4);text-align:center}
+.scheda h2{color:var(--rosso-scuro);font-size:1.5rem;margin-bottom:8px}
+.scheda h3{color:var(--rosso-scuro);font-size:1.05rem;margin:16px 0 6px;text-align:left}
+.scheda p,.scheda li{font-size:.94rem;line-height:1.55;text-align:left}
+.scheda ul{padding-left:20px}
+.codeblock{background:#241A12;color:#FFE6C7;font-family:Menlo,Consolas,monospace;font-size:.84rem;border-radius:10px;padding:12px 14px;margin:8px 0;white-space:pre;overflow-x:auto;line-height:1.55;text-align:left}
+.riga-bottoni{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.stelle-box{display:flex;justify-content:center;gap:12px;margin:14px 0}
+.dato-vittoria{display:flex;justify-content:space-between;background:#fff;border:2px solid var(--bordo);border-radius:10px;padding:8px 14px;margin:6px 0;font-size:.94rem}
+.dato-vittoria strong{font-family:'Fredoka',sans-serif}
+.codice-vittoria{background:var(--rosso-scuro);color:#fff;border-radius:12px;padding:12px 16px;text-align:center;margin-top:12px;font-size:.9rem}
+.codice-vittoria .parola{font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:.18em;margin-top:4px}
+.parla-vittoria{max-width:430px;margin:12px auto 0}
+@media (prefers-reduced-motion:reduce){#court .tok{transition:none}.nodo.corrente .palla{animation:none}}
+@media (max-width:880px){
+  .lv-corpo{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto}
+  .colonna-stage{border-right:none;border-bottom:2px solid var(--bordo)}
+  .consegna{max-height:150px}
+}
+
+/* ===== PREMI (livelli premio) ===== */
+.bacheca{background:linear-gradient(135deg,#fff,#FFF6E6);border:2px dashed var(--oro);border-radius:18px;padding:14px 16px;box-shadow:0 6px 18px rgba(120,70,30,.10)}
+.bacheca .zona-num{background:var(--oro);color:#4a3500}
+.premio-griglia{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:560px){.premio-griglia{grid-template-columns:1fr}}
+.trofeo{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;background:#fff;border:2px solid var(--bordo);border-radius:14px;padding:14px 10px;cursor:pointer;transition:transform .12s}
+.trofeo:not(.bloccato):hover{transform:translateY(-3px)}
+.trofeo.bloccato{cursor:default;opacity:.65}
+.trofeo .medaglia{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 38% 32%,#F6D67A,#E0A21E 65%,#A8540C);box-shadow:0 4px 10px rgba(0,0,0,.18)}
+.trofeo.bloccato .medaglia{background:#b9ad99;box-shadow:none}
+.trofeo .medaglia svg{width:28px;height:28px}
+.trofeo .tit-premio{font-family:'Fredoka',sans-serif;font-weight:600;font-size:.92rem;color:var(--rosso-scuro);line-height:1.15}
+.trofeo .sot-premio{font-size:.72rem;color:var(--grigio)}
+#premio .testa{background:var(--arancio-scuro)}
+.premio-corpo{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:0 0 28px}
+.premio-inner{width:min(820px,100%);padding:18px;display:flex;flex-direction:column;gap:16px}
+.premio-hero{display:flex;gap:16px;align-items:center;background:#fff;border:2px solid var(--bordo);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(120,70,30,.10)}
+.premio-hero img{width:118px;height:118px;border-radius:14px;object-fit:cover;flex:none;border:3px solid var(--oro)}
+.premio-hero .occhiello-pr{color:var(--arancio-scuro);font-family:'Fredoka',sans-serif;font-size:.78rem;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.premio-hero h2{color:var(--rosso-scuro);font-family:'Fredoka',sans-serif;font-size:1.4rem;margin-bottom:6px}
+.premio-hero p{font-size:.95rem;line-height:1.5}
+@media (max-width:560px){.premio-hero{flex-direction:column;text-align:center}}
+.cmap{display:flex;flex-direction:column;align-items:center;background:#fff;border:2px solid var(--bordo);border-radius:18px;padding:20px 16px}
+.cmap-centro{background:var(--rosso);color:#fff;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.05rem;padding:10px 24px;border-radius:999px;box-shadow:0 4px 0 var(--rosso-scuro);letter-spacing:.02em}
+.cmap-link{width:3px;height:22px;background:var(--oro)}
+.cmap-rami{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%}
+@media (max-width:620px){.cmap-rami{grid-template-columns:1fr}}
+.cmap-ramo{background:var(--crema);border:2px solid var(--oro);border-radius:14px;padding:12px 14px;text-align:left}
+.cmap-ramo h4{font-family:'Fredoka',sans-serif;color:var(--arancio-scuro);font-size:1rem;margin-bottom:4px}
+.cmap-ramo p{font-size:.86rem;line-height:1.5}
+.valori-griglia{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:560px){.valori-griglia{grid-template-columns:1fr}}
+.valore{background:#fff;border:2px solid var(--bordo);border-radius:14px;padding:12px 14px;border-left:5px solid var(--rosso)}
+.valore h4{font-family:'Fredoka',sans-serif;color:var(--rosso-scuro);font-size:.98rem;margin-bottom:3px}
+.valore p{font-size:.85rem;line-height:1.45}
+.premio-testo{background:#FFF6E6;border-left:4px solid var(--oro);border-radius:8px;padding:14px 16px;font-size:.95rem;line-height:1.6}
+.premio-testo strong{color:var(--arancio-scuro)}
+.premio-pie{display:flex;justify-content:center;gap:10px;margin-top:4px}
+
+/* ===== strato narrativo: banner delle zone ===== */
+.zona-banner{position:relative;margin:-14px -16px 14px;border-radius:16px 16px 0 0;overflow:hidden;height:128px}
+.zona-banner img{width:100%;height:100%;object-fit:cover;display:block}
+.zona-banner .vela{position:absolute;inset:0;background:linear-gradient(to top,rgba(154,28,19,.92),rgba(154,28,19,.12) 62%,rgba(154,28,19,0));display:flex;flex-direction:column;justify-content:flex-end;padding:10px 16px}
+.zona-banner .capitolo{font-family:'Fredoka',sans-serif;font-weight:700;color:#FFD9A8;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.zona-banner .racconto{color:#fff;font-size:.9rem;line-height:1.35;text-shadow:0 1px 4px rgba(0,0,0,.6);max-width:680px}
+.bacheca .zona-banner .vela{background:linear-gradient(to top,rgba(168,84,12,.92),rgba(168,84,12,.12) 62%,rgba(168,84,12,0))}
+.bacheca .zona-banner .capitolo{color:#FFE9C2}
+.vittoria-trofeo{width:100%;max-height:200px;object-fit:cover;border-radius:14px;border:3px solid var(--oro);margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- ===== SPLASH ===== -->
+<div class="screen attiva" id="splash">
+  <div class="pannello">
+    <img src="2.jpg" alt="Coach! il coding del basket" class="hero-img" onerror="this.style.display='none'">
+    <div class="occhiello">serie del coding &middot; gioco 4</div>
+    <h1>Coach!</h1>
+    <p>Sei l'allenatore della squadra. Non scendi in campo tu: <strong>istruisci i tuoi giocatori</strong> scrivendo i comandi giusti, schivi gli avversari e organizzi i tiri a canestro.</p>
+    <div class="splash-coach">
+      <span class="av" id="splash-av"></span>
+      <div class="fumetto">«Benvenuto in panchina! Io sono <strong>Coach Bruno</strong>. La squadra fa quello che le scrivi: un comando alla volta. Pronto a vincere il campionato?»</div>
+    </div>
+    <button class="btn-big" id="btn-gioca">Entra in campo</button>
+    <div class="splash-foot">
+      <img src="logoscuolarosso.jpg" alt="Scuola Sacra Famiglia" onerror="this.style.display='none'">
+      <div class="cr"><strong>Scuola Sacra Famiglia</strong> &middot; Orzinuovi (BS)<br>&copy; 2026 Andrea Cerioli &mdash; Animatore Digitale<br>Serie del coding &middot; gioco 4</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAPPA ===== -->
+<div class="screen" id="mappa">
+  <div class="testa">
+    <img src="bruno.jpg" alt="Coach Bruno" class="logo-ball" id="logo-ball" onerror="this.style.background='#E07B1E'">
+    <h1>Il Campionato</h1>
+    <span class="badge-docente" id="badge-docente">modalità coach</span>
+    <span class="spazio"></span>
+    <button class="btn-musica" aria-label="musica on/off" title="musica"></button>
+    <button class="btn-testa" id="btn-docente">Per il docente</button>
+  </div>
+  <div class="mappa-corpo">
+    <img src="1.jpg" alt="" class="banner-int" onerror="this.style.display='none'">
+    <div class="mappa-inner">
+      <div id="zone"></div>
+      <div class="mappa-piedi">
+        <div class="codice-box">
+          <input id="input-codice" placeholder="codice partita" maxlength="14">
+          <button id="btn-codice">Entra</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LIVELLO ===== -->
+<div class="screen" id="livello">
+  <div class="lv-testa">
+    <img src="bruno.jpg" alt="Coach Bruno" class="logo-ball" id="logo-ball2" onerror="this.style.background='#E07B1E'">
+    <div>
+      <div class="titolo-lv" id="lv-titolo">—</div>
+      <div class="zona-lv" id="lv-zona">—</div>
+    </div>
+    <span class="spazio"></span>
+    <button class="btn-musica" aria-label="musica on/off" title="musica"></button>
+  </div>
+  <div class="lv-corpo">
+    <div class="colonna-stage">
+      <div class="consegna" id="lv-brief">—</div>
+      <div class="court-head">Canestri: <strong id="score">0 / 1</strong></div>
+      <div class="stage-box" id="stage"></div>
+    </div>
+    <div class="colonna-codice">
+      <div class="palette" id="palette"></div>
+      <div class="editor-area">
+        <div class="numeri" id="numeri">1</div>
+        <textarea id="codice" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="scrivi qui i comandi della squadra..."></textarea>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div class="barra-azioni">
+        <button class="btn-esegui" id="btn-esegui">Via!</button>
+        <button class="btn-sec" id="btn-reset">Pulisci</button>
+        <button class="btn-sec" id="btn-guida">Come si gioca</button>
+        <button class="btn-sol" id="btn-sol">Soluzione</button>
+        <span class="spazio"></span>
+        <button class="btn-sec" id="btn-mappa-da-lv">Campionato</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PREMIO (livello premio) ===== -->
+<div class="screen" id="premio">
+  <div class="testa">
+    <img src="bruno.jpg" alt="Coach Bruno" class="logo-ball" onerror="this.style.background='#E07B1E'">
+    <h1 id="premio-titolo">Premio</h1>
+    <span class="spazio"></span>
+    <button class="btn-testa" id="btn-premio-mappa">Campionato</button>
+  </div>
+  <div class="premio-corpo">
+    <div class="premio-inner" id="premio-inner"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-vittoria"><div class="scheda" id="scheda-vittoria"></div></div>
+<div class="overlay" id="overlay-guida"><div class="scheda" id="scheda-guida"></div></div>
+
+<!-- ============================================================ -->
+<!-- MOTORE (verificato in Node) -->
+<!-- ============================================================ -->
+<script>
+// ============================================================
+// COACH! - motore del gioco di coding del basket
+// Campo a griglia (COLS x ROWS). Il canestro e' un punto in alto
+// al centro (basketCol, -1). Riga 0 = sotto canestro, riga in
+// basso = fondo campo. up = verso il canestro.
+// Linguaggio PLAY (inglese). Verificato in Node.
+// ============================================================
+(function(global){
+'use strict';
+
+const DIRS = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
+
+function err(line, message){ const e = new Error(message); e.line = line; e.didactic = true; return e; }
+
+// ---- parser (blocchi a rientro di 2 spazi, come repeat/if) ----
+function parseProgram(src){
+  const rawLines = src.split('\n');
+  const prog = [];
+  const stack = [{indent:-2, body:prog}];
+  for(let i=0;i<rawLines.length;i++){
+    const lineNo = i+1;
+    let line = rawLines[i].replace(/\t/g,'  ');
+    if(!line.trim()) continue;
+    const indent = line.length - line.trimStart().length;
+    if(indent % 2 !== 0) throw err(lineNo, "il rientro deve essere di 2 spazi alla volta");
+    const txt = line.trim().toLowerCase();
+    while(stack.length>1 && indent <= stack[stack.length-1].indent){
+      const fr = stack.pop();
+      if(fr.body.length===0) throw err(fr.line, 'dopo "'+fr.kw+'" serve almeno una riga rientrata di 2 spazi');
+    }
+    const parent = stack[stack.length-1];
+    const expected = parent.indent + 2;
+    if(indent > expected) throw err(lineNo, "rientro troppo profondo: togli qualche spazio");
+    if(indent === expected && stack.length===1 && indent>0) throw err(lineNo, "questa riga e' rientrata ma sopra non c'e' un repeat o un if");
+    const tok = txt.split(/\s+/);
+    const st = parseStatement(tok, lineNo);
+    parent.body.push(st);
+    if(st.type==='repeat' || st.type==='if'){
+      stack.push({indent:indent, body:st.body, line:lineNo, kw: st.type==='repeat'?('repeat '+st.n):('if '+st.cond.kind)});
+    }
+  }
+  while(stack.length>1){
+    const fr = stack.pop();
+    if(fr.body.length===0) throw err(fr.line, 'dopo "'+fr.kw+'" serve almeno una riga rientrata di 2 spazi');
+  }
+  return prog;
+}
+
+function parseStatement(tok, line){
+  const cmd = tok[0];
+  switch(cmd){
+    case 'dribble': {
+      if(!tok[1]) throw err(line, 'dribble in che direzione? Scrivi "dribble up", "down", "left" o "right"');
+      if(!DIRS[tok[1]]) throw err(line, '"'+tok[1]+'" non e\' una direzione. Le direzioni sono: up, down, left, right');
+      if(tok.length>2) throw err(line, 'un passo alla volta: scrivi solo "dribble '+tok[1]+'"');
+      return {type:'dribble', dir:tok[1], line};
+    }
+    case 'move': {
+      if(!tok[1]) throw err(line, 'move chi? Serve un giocatore, ad esempio "move p2 up"');
+      if(!/^p[1-5]$/.test(tok[1])) throw err(line, '"'+tok[1]+'" non e\' un giocatore. Usa p1, p2, p3...');
+      if(!tok[2]) throw err(line, 'move '+tok[1]+' in che direzione? up, down, left o right');
+      if(!DIRS[tok[2]]) throw err(line, '"'+tok[2]+'" non e\' una direzione. Le direzioni sono: up, down, left, right');
+      return {type:'move', who:tok[1], dir:tok[2], line};
+    }
+    case 'pass': {
+      if(!tok[1]) throw err(line, 'pass a chi? Serve un compagno, ad esempio "pass p2"');
+      if(!/^p[1-5]$/.test(tok[1])) throw err(line, '"'+tok[1]+'" non e\' un giocatore. Usa p1, p2, p3...');
+      return {type:'pass', who:tok[1], line};
+    }
+    case 'shoot': return {type:'shoot', line};
+    case 'wait': {
+      let n=1;
+      if(tok[1]!==undefined){ n=Number(tok[1]); if(!Number.isInteger(n)||n<1) throw err(line,'wait per quanto? Scrivi "wait" oppure "wait 2"'); if(n>20) throw err(line,'massimo "wait 20"'); }
+      return {type:'wait', n, line};
+    }
+    case 'repeat': {
+      const n = Number(tok[1]);
+      if(!tok[1] || !Number.isInteger(n) || n<1) throw err(line, 'repeat quante volte? Serve un numero, ad esempio "repeat 3"');
+      if(n>30) throw err(line, 'massimo "repeat 30"');
+      return {type:'repeat', n, body:[], line};
+    }
+    case 'if': {
+      const kind = tok[1];
+      if(!kind) throw err(line, 'if che cosa? Le condizioni sono: open, blocked, clear p2');
+      if(!['open','blocked','clear'].includes(kind)) throw err(line, '"'+kind+'" non e\' una condizione. Le condizioni sono: open, blocked, clear');
+      if(kind==='clear'){
+        if(!tok[2] || !/^p[1-5]$/.test(tok[2])) throw err(line, '"if clear" di chi? Ad esempio "if clear p2"');
+        return {type:'if', cond:{kind, who:tok[2]}, body:[], line};
+      }
+      return {type:'if', cond:{kind}, body:[], line};
+    }
+    default:
+      throw err(line, 'comando sconosciuto "'+cmd+'". I comandi sono: dribble, pass, move, shoot, wait, repeat, if');
+  }
+}
+
+// ---- geometria ----
+function dist(c,r,bx,by){ return Math.hypot(c-bx, r-by); }
+// celle attraversate dal segmento (escludendo gli estremi)
+function lineCells(c0,r0,c1,r1){
+  const cells=[]; const steps=Math.max(1, Math.round(Math.hypot(c1-c0,r1-r0)*8));
+  let prev=null;
+  for(let i=0;i<=steps;i++){
+    const t=i/steps;
+    const c=Math.round(c0+(c1-c0)*t), r=Math.round(r0+(r1-r0)*t);
+    const key=c+','+r;
+    if(key!==prev){ cells.push([c,r]); prev=key; }
+  }
+  // togli estremi
+  return cells.filter(([c,r])=>!(c===c0&&r===r0)&&!(c===c1&&r===r1));
+}
+
+// ---- stato ----
+function newState(level, scen){
+  const players={};
+  for(const id in level.players){ const p=level.players[id]; players[id]={c:p[0], r:p[1]}; }
+  let srcDefs = level.defenders||[];
+  if(scen && scen.defs) srcDefs = scen.defs.map(d=>Array.isArray(d)?{pos:d}:d);
+  const defs=srcDefs.map(d=>({c:(d.patrol?d.patrol[0][0]:d.pos[0]), r:(d.patrol?d.patrol[0][1]:d.pos[1]), patrol:d.patrol||null, pi:0}));
+  return {
+    players, defs,
+    ball: level.ball,            // id del giocatore con palla
+    cols: level.cols||7, rows: level.rows||6,
+    bx: (level.basketCol!=null?level.basketCol:3), by:-1,
+    range: level.range||3.5,
+    scored:0, targets: level.targets||1,
+    ticks:0, frames:[]
+  };
+}
+function defAt(st, c, r){ return st.defs.some(d=>d.c===c&&d.r===r); }
+function playerAt(st, c, r, except){ for(const id in st.players){ if(id===except) continue; const p=st.players[id]; if(p.c===c&&p.r===r) return id; } return null; }
+
+function shotMakeable(st, id){
+  const p=st.players[id];
+  if(dist(p.c,p.r,st.bx,st.by) > st.range+1e-9) return {ok:false, why:'range'};
+  const cells=lineCells(p.c,p.r,st.bx,st.by);
+  for(const [c,r] of cells){ if(defAt(st,c,r)) return {ok:false, why:'blocked'}; }
+  return {ok:true};
+}
+function laneClear(st, fromId, toId){
+  const a=st.players[fromId], b=st.players[toId];
+  const cells=lineCells(a.c,a.r,b.c,b.r);
+  for(const [c,r] of cells){ if(defAt(st,c,r)) return false; }
+  return true;
+}
+
+function snap(st, extra){
+  const f={
+    players: {}, ball: st.ball,
+    defs: st.defs.map(d=>({c:d.c,r:d.r})),
+    scored: st.scored, ticks: st.ticks
+  };
+  for(const id in st.players) f.players[id]={c:st.players[id].c, r:st.players[id].r};
+  st.frames.push(Object.assign(f, extra||{}));
+}
+function advanceDefs(st){
+  for(const d of st.defs){ if(d.patrol){ d.pi=(d.pi+1)%d.patrol.length; d.c=d.patrol[d.pi][0]; d.r=d.patrol[d.pi][1]; } }
+}
+
+function fail(st, line, reason){ const e=err(line, reason); e.fail=true; e.state=st; return e; }
+
+function runProgram(level, prog, scen){
+  const st=newState(level, scen);
+  snap(st, {mark:'start'});
+  let guard=0;
+  const exec=(stmts)=>{
+    for(const s of stmts){
+      if(st.done) return;
+      if(++guard>2000) throw err(s.line||0,'troppe azioni: il programma e\' troppo lungo');
+      switch(s.type){
+        case 'dribble': {
+          const carrier=st.ball;
+          const p=st.players[carrier];
+          const [dc,dr]=DIRS[s.dir];
+          const nc=p.c+dc, nr=p.r+dr;
+          if(nc<0||nc>=st.cols||nr<0||nr>=st.rows) throw fail(st, s.line, 'fuori dal campo: di la\' non si puo\' andare');
+          const other=playerAt(st,nc,nr,carrier);
+          if(other) throw fail(st, s.line, 'c\'e\' gia\' un tuo compagno ('+other.toUpperCase()+') in quella casella');
+          if(defAt(st,nc,nr)) throw fail(st, s.line, 'palla persa! Sei andato addosso a un difensore: giragli intorno');
+          p.c=nc; p.r=nr;
+          st.ticks++; snap(st,{mark:'dribble',who:carrier}); advanceDefs(st);
+          break;
+        }
+        case 'move': {
+          if(!st.players[s.who]) throw err(s.line, s.who.toUpperCase()+' non e\' in campo in questa azione');
+          if(s.who===st.ball) throw fail(st, s.line, s.who.toUpperCase()+' ha la palla: per muoverlo usa "dribble" (con "move" si spostano i compagni senza palla)');
+          const p=st.players[s.who];
+          const [dc,dr]=DIRS[s.dir];
+          const nc=p.c+dc, nr=p.r+dr;
+          if(nc<0||nc>=st.cols||nr<0||nr>=st.rows) throw fail(st, s.line, s.who.toUpperCase()+' uscirebbe dal campo');
+          const other=playerAt(st,nc,nr,s.who);
+          if(other) throw fail(st, s.line, 'in quella casella c\'e\' gia\' '+other.toUpperCase());
+          if(defAt(st,nc,nr)) throw fail(st, s.line, s.who.toUpperCase()+' finirebbe addosso a un difensore');
+          p.c=nc; p.r=nr;
+          st.ticks++; snap(st,{mark:'move',who:s.who}); advanceDefs(st);
+          break;
+        }
+        case 'pass': {
+          if(!st.players[s.who]) throw err(s.line, s.who.toUpperCase()+' non e\' in campo in questa azione');
+          if(s.who===st.ball) throw fail(st, s.line, 'la palla ce l\'ha gia\' '+s.who.toUpperCase());
+          if(!laneClear(st, st.ball, s.who)) throw fail(st, s.line, 'passaggio intercettato! Un difensore era sulla linea: smarca prima il compagno o passa da un\'altra parte');
+          const from=st.ball;
+          st.ball=s.who;
+          st.ticks++; snap(st,{mark:'pass',from:from,who:s.who}); advanceDefs(st);
+          break;
+        }
+        case 'shoot': {
+          const shooter=st.ball;
+          const m=shotMakeable(st, shooter);
+          if(!m.ok){
+            if(m.why==='range') throw fail(st, s.line, 'tiro troppo lontano: avvicinati al canestro prima di tirare');
+            throw fail(st, s.line, 'tiro stoppato! Un difensore era sulla linea di tiro: cerca un angolo libero');
+          }
+          st.scored++;
+          st.ticks++; snap(st,{mark:'shoot',who:shooter, made:true});
+          if(st.scored>=st.targets){ st.done=true; return; }
+          // canestro segnato: rimetti in gioco
+          if(level.inbound){ st.ball=level.inbound.player; const ip=st.players[level.inbound.player]; ip.c=level.inbound.cell[0]; ip.r=level.inbound.cell[1]; }
+          advanceDefs(st);
+          break;
+        }
+        case 'wait': {
+          for(let i=0;i<s.n;i++){ st.ticks++; snap(st,{mark:'wait'}); advanceDefs(st); }
+          break;
+        }
+        case 'repeat': for(let i=0;i<s.n && !st.done;i++) exec(s.body); break;
+        case 'if': {
+          const c=s.cond; let val;
+          if(c.kind==='open') val=shotMakeable(st, st.ball).ok;
+          else if(c.kind==='blocked'){ const m=shotMakeable(st, st.ball); val=(!m.ok && m.why==='blocked'); }
+          else { if(!st.players[c.who]) val=false; else val=laneClear(st, st.ball, c.who); }
+          if(val) exec(s.body);
+          break;
+        }
+      }
+    }
+  };
+  exec(prog);
+  return st;
+}
+
+function stars(level, st){
+  const par=level.par;
+  if(st.ticks<=par.three) return 3;
+  if(st.ticks<=par.two) return 2;
+  return 1;
+}
+
+const API={ parseProgram, runProgram, stars, DIRS, shotMakeable, laneClear, lineCells };
+if(typeof module!=='undefined' && module.exports) module.exports=API;
+global.COACH_ENGINE=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+
+<!-- ============================================================ -->
+<!-- LIVELLI -->
+<!-- ============================================================ -->
+<script>
+// 16 livelli di COACH! - 4 zone. Griglia 7x6, canestro al punto (3,-1).
+// "sol" = soluzione di riferimento (modalita' docente / verifica).
+(function(global){
+'use strict';
+const LEVELS = [
+// ============ ZONA 1 - RISCALDAMENTO (dribble, shoot) ============
+{ id:1, nome:'Il primo canestro', zona:'Riscaldamento', codice:'PALLEGGIO', cmds:['dribble','shoot'],
+  players:{p1:[3,4]}, ball:'p1', defenders:[],
+  brief:'Sei vicino al canestro ma non abbastanza per segnare. Fai avanzare il tuo giocatore palleggiando verso il canestro e poi tira. Prova: <code>dribble up</code> due volte, poi <code>shoot</code>.',
+  fact:'Nel basket non si cammina con la palla in mano: si palleggia. Ogni avanzamento del tuo programma e\' un palleggio verso canestro.',
+  par:{three:3, two:4},
+  sol:'dribble up\ndribble up\nshoot' },
+
+{ id:2, nome:'Mettiti in posizione', zona:'Riscaldamento', codice:'CANESTRO', cmds:['dribble','shoot'],
+  players:{p1:[1,3]}, ball:'p1', defenders:[],
+  brief:'Sei troppo defilato sulla sinistra: da qui il tiro non entra. Spostati verso il centro e avvicinati, poi tira. Combina <code>dribble right</code> e <code>dribble up</code> per trovare l\'angolo giusto, poi <code>shoot</code>.',
+  fact:'Un buon tiratore cerca sempre l\'angolo migliore verso il canestro: la posizione conta quanto il tiro.',
+  par:{three:3, two:4},
+  sol:'dribble right\ndribble up\nshoot' },
+
+{ id:3, nome:'Salta il difensore', zona:'Riscaldamento', codice:'TABELLONE', cmds:['dribble','shoot'],
+  players:{p1:[3,3]}, ball:'p1', defenders:[{pos:[3,2]}],
+  brief:'Un avversario ti sbarra la strada proprio davanti, sulla linea del canestro. Se gli vai addosso perdi la palla! Giragli intorno di lato, poi cerca un tiro libero da un angolo aperto.',
+  fact:'Un difensore piazzato sulla linea di tiro la "stoppa". Cambiare lato di un solo passo apre un corridoio pulito verso il canestro.',
+  par:{three:3, two:4},
+  sol:'dribble left\ndribble up\nshoot' },
+
+{ id:4, nome:'Tra due avversari', zona:'Riscaldamento', codice:'RIMBALZO', cmds:['dribble','shoot'],
+  players:{p1:[3,5]}, ball:'p1', defenders:[{pos:[3,4]},{pos:[3,2]}],
+  brief:'Due avversari presidiano il centro del campo. Parti dal fondo, scegli un lato libero, risali fino a tiro e cerca l\'angolo pulito verso il canestro.',
+  fact:'Quando la difesa chiude il centro, le squadre attaccano dagli esterni: si gira intorno all\'ostacolo invece di sfondarlo.',
+  par:{three:5, two:6},
+  sol:'dribble left\ndribble up\ndribble up\ndribble up\nshoot' },
+
+// ============ ZONA 2 - SQUADRA (pass, move) ============
+{ id:5, nome:'Il primo passaggio', zona:'Squadra', codice:'ASSIST', cmds:['dribble','pass','shoot'],
+  players:{p1:[2,5], p2:[2,1]}, ball:'p1', defenders:[{pos:[3,3]}],
+  brief:'Tu (P1) sei lontano dal canestro, ma il tuo compagno P2 e\' gia\' libero sotto rete. Invece di palleggiare per tutto il campo, servilo con un passaggio e lascia tirare lui. Usa <code>pass p2</code> e poi <code>shoot</code>.',
+  fact:'Il passaggio e\' l\'arma piu\' veloce del basket: la palla corre piu\' di qualsiasi giocatore. Un buon assist vale come un canestro.',
+  par:{three:2, two:3},
+  sol:'pass p2\nshoot' },
+
+{ id:6, nome:'Smarca il compagno', zona:'Squadra', codice:'TRIPLA', cmds:['dribble','pass','move','shoot'],
+  players:{p1:[3,4], p2:[4,1]}, ball:'p1', defenders:[{pos:[4,0]}],
+  brief:'P2 e\' sotto canestro ma ha un avversario incollato che gli copre il tiro. Da coach, spostalo in una posizione libera prima di servirlo. Usa <code>move p2 left</code> per smarcarlo, poi <code>pass p2</code> e <code>shoot</code>.',
+  fact:'"Smarcarsi" significa liberarsi dalla guardia avversaria. Con <code>move</code> sposti un compagno SENZA palla; con <code>dribble</code> muovi chi ce l\'ha.',
+  par:{three:3, two:4},
+  sol:'move p2 left\npass p2\nshoot' },
+
+{ id:7, nome:'Gira la palla', zona:'Squadra', codice:'CONTROPIEDE', cmds:['dribble','pass','move','shoot'],
+  players:{p1:[0,4], p2:[3,4], p3:[5,1]}, ball:'p1', defenders:[{pos:[3,2]}],
+  brief:'Il tuo tiratore migliore (P3) e\' libero a destra, ma un avversario al centro intercetta il passaggio diretto. Fai girare la palla appoggiandoti al compagno in mezzo, poi servi P3 per il tiro.',
+  fact:'Far "girare la palla" da un lato all\'altro sposta la difesa e apre linee di passaggio: spesso due passaggi corti battono uno lungo e rischioso.',
+  par:{three:3, two:4},
+  sol:'pass p2\npass p3\nshoot' },
+
+{ id:8, nome:'Due contro uno', zona:'Squadra', codice:'SCHIACCIATA', cmds:['dribble','pass','move','shoot'],
+  players:{p1:[3,5], p2:[4,1]}, ball:'p1', defenders:[{pos:[3,3]}],
+  brief:'Porta palla evitando il difensore al centro, spostati sull\'esterno e da li\' servi P2 sotto canestro per il punto. Pensa prima al percorso, poi scrivi i comandi.',
+  fact:'Quando attiri su di te un difensore, un compagno resta libero: il "due contro uno" e\' la situazione che ogni attacco cerca di creare.',
+  par:{three:4, two:5},
+  sol:'dribble right\ndribble up\npass p2\nshoot' },
+
+// ============ ZONA 3 - SCHEMI (repeat, if) ============
+{ id:9, nome:'Risali il campo', zona:'Schemi', codice:'TIMEOUT', cmds:['dribble','pass','shoot','repeat'],
+  players:{p1:[3,5]}, ball:'p1', defenders:[],
+  brief:'Il canestro e\' lontano e servono tanti palleggi uguali per arrivarci. Invece di ripetere a mano lo stesso comando, usa un ciclo: <code>repeat 3</code> con dentro (rientrato di 2 spazi) <code>dribble up</code>, poi <code>shoot</code>.',
+  fact:'Quando un\'azione si ripete identica, un ciclo (<code>repeat</code>) la scrive una volta sola: il codice resta corto e chiaro.',
+  par:{three:4, two:6},
+  sol:'repeat 3\n  dribble up\nshoot' },
+
+{ id:10, nome:'Lo slalom', zona:'Schemi', codice:'PLAYMAKER', cmds:['dribble','pass','shoot','repeat'],
+  players:{p1:[0,5]}, ball:'p1', defenders:[{pos:[0,4]},{pos:[1,3]},{pos:[2,2]}],
+  brief:'Una diagonale di avversari ti chiude la sinistra. Trova il lato libero e risali fino al canestro: tanti palleggi uguali, quindi conviene un <code>repeat</code> per scrivere meno.',
+  fact:'Riconoscere uno schema che si ripete e racchiuderlo in un ciclo e\' il cuore del pensiero computazionale: meno righe, meno errori.',
+  par:{three:7, two:9},
+  sol:'repeat 3\n  dribble right\nrepeat 3\n  dribble up\nshoot' },
+
+{ id:11, nome:'Tira o passa?', zona:'Schemi', codice:'DIFESA', cmds:['dribble','pass','shoot','if'],
+  players:{p1:[3,2], p2:[1,1]}, ball:'p1',
+  scenarios:[ {defs:[[3,1]]}, {defs:[[2,1]]} ],
+  brief:'A volte avrai il tiro libero, a volte un avversario te lo stoppa: non lo sai prima! Insegna alla squadra a decidere da sola. Se il tiro e\' libero (<code>if open</code>) tira; se e\' stoppato (<code>if blocked</code>) servi P2 che e\' smarcato, poi fai tirare lui.',
+  fact:'Una condizione (<code>if</code>) fa scegliere al programma in base a cio\' che trova: "se il tiro e\' libero tira, altrimenti passa". E\' la lettura della difesa.',
+  par:{three:2, two:3},
+  sol:'if open\n  shoot\nif blocked\n  pass p2\n  shoot' },
+
+{ id:12, nome:'Lo schema completo', zona:'Schemi', codice:'OVERTIME', cmds:['dribble','pass','shoot','repeat','if'],
+  players:{p1:[3,5], p2:[1,1]}, ball:'p1',
+  scenarios:[ {defs:[[3,1]]}, {defs:[[5,2]]} ],
+  brief:'Risali il campo fino alla zona di tiro, poi leggi la difesa: se sei libero tira, altrimenti scarica al compagno smarcato e fallo segnare. Metti insieme ciclo e condizione.',
+  fact:'Ciclo + condizione: prima porti la palla dove serve (repeat), poi decidi cosa fare in base alla difesa (if). E\' uno schema vero.',
+  par:{three:5, two:7},
+  sol:'repeat 3\n  dribble up\nif open\n  shoot\nif blocked\n  pass p2\n  shoot' },
+
+// ============ ZONA 4 - PARTITA (wait, difensori in movimento, no comandi nel testo) ============
+{ id:13, nome:'Il difensore in movimento', zona:'Partita', codice:'CAMPIONE', cmds:['dribble','pass','shoot','wait','repeat','if'],
+  players:{p1:[3,2]}, ball:'p1', defenders:[{patrol:[[3,1],[4,1]]}],
+  brief:'Sei in posizione di tiro, ma un avversario fa la spola davanti al canestro. Se tiri mentre ti copre, te la stoppa. Aspetta il momento giusto, poi tira.',
+  fact:'In partita gli avversari si muovono. Saper aspettare l\'istante in cui la linea si libera vale piu\' di tirare in fretta.',
+  par:{three:2, two:3},
+  sol:'wait\nshoot' },
+
+{ id:14, nome:'La finestra di passaggio', zona:'Partita', codice:'PARQUET', cmds:['dribble','pass','shoot','wait','move','repeat','if'],
+  players:{p1:[1,4], p2:[1,1]}, ball:'p1', defenders:[{patrol:[[1,2],[2,2]]}],
+  brief:'P2 e\' libero sotto rete, ma un avversario taglia avanti e indietro sulla linea del tuo passaggio. Aspetta che la strada si apra, servi il compagno e fallo segnare.',
+  fact:'La "finestra di passaggio" e\' l\'attimo in cui la linea verso il compagno e\' sgombra: i playmaker la riconoscono e la sfruttano al volo.',
+  par:{three:3, two:4},
+  sol:'wait\npass p2\nshoot' },
+
+{ id:15, nome:'Botta e risposta', zona:'Partita', codice:'TROFEO', cmds:['dribble','pass','shoot','wait','move','repeat','if'],
+  players:{p1:[2,3], p2:[4,3]}, ball:'p1', defenders:[{pos:[3,2]}], targets:2, inbound:{player:'p2', cell:[4,3]},
+  brief:'Servono DUE canestri per chiudere. Fai segnare il primo giocatore, poi - rimessa in gioco - porta a canestro anche il secondo. Organizza i due tiri uno dopo l\'altro.',
+  fact:'Una partita non finisce con un canestro solo: organizzare azioni in sequenza, una dopo l\'altra, e\' il mestiere del coach.',
+  par:{three:4, two:6},
+  sol:'dribble up\nshoot\ndribble up\nshoot' },
+
+{ id:16, nome:'La finale', zona:'Partita', codice:'FINALE', cmds:['dribble','pass','shoot','wait','move','repeat','if'],
+  players:{p1:[3,5], p2:[5,3]}, ball:'p1', defenders:[{patrol:[[4,1],[3,1]]}], targets:2, inbound:{player:'p2', cell:[5,3]},
+  brief:'L\'ultima azione del campionato: servono due canestri. Risali il campo con il primo giocatore, scegli l\'attimo giusto contro il difensore che fa la spola sotto rete, segna; poi porta a canestro anche il secondo giocatore dall\'altro lato. In bocca al lupo, coach!',
+  fact:'Hai imparato a far muovere i giocatori, passare, leggere la difesa, ripetere schemi e aspettare il momento giusto: questo e\' coaching.',
+  par:{three:8, two:10},
+  sol:'repeat 3\n  dribble up\nwait\nshoot\ndribble up\ndribble up\nshoot' }
+];
+if(typeof module!=='undefined' && module.exports) module.exports=LEVELS;
+global.COACH_LEVELS=LEVELS;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+
+<!-- ============================================================ -->
+<!-- APP (interfaccia, renderer, playback) -->
+<!-- ============================================================ -->
+<script>
+(function(){
+'use strict';
+const ENG = window.COACH_ENGINE, LEVELS = window.COACH_LEVELS;
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+
+// progressi in memoria (azzerati a ogni riaccesso)
+let maxSbloccato=1, stelleLivello={}, docente=false, livelloCorrente=1, curLevel=null, curTargets=1, playing=false;
+let editorEl, numeriEl, tok={players:{},defs:[],ball:null};
+
+function show(id){ $$('.screen').forEach(e=>e.classList.remove('attiva')); $(id).classList.add('attiva'); }
+function codiceDi(id){ return (LEVELS[id-1]||{}).codice; }
+
+// ===== COURT geometry =====
+const SVGNS='http://www.w3.org/2000/svg';
+const COLS=7, ROWS=6, CW=54, CH=58, MX=30, MY=86;
+const VW=MX*2+CW*COLS, VH=MY+CH*ROWS+14;
+function cx(c){ return MX+CW/2+c*CW; }
+function cy(r){ return MY+CH/2+r*CH; }
+const HOOPX=cx(3), HOOPY=cy(-1);
+function el(tag,attrs){ const e=document.createElementNS(SVGNS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+
+function markings(){
+  const L='#FFFFFF', x0=MX, y0=MY, w=CW*COLS, h=CH*ROWS;
+  let s='';
+  s+='<rect x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'" rx="6" fill="none" stroke="'+L+'" stroke-width="3" stroke-opacity="0.85"/>';
+  for(let c=1;c<COLS;c++) s+='<line x1="'+(x0+c*CW)+'" y1="'+y0+'" x2="'+(x0+c*CW)+'" y2="'+(y0+h)+'" stroke="#fff" stroke-opacity="0.12"/>';
+  for(let r=1;r<ROWS;r++) s+='<line x1="'+x0+'" y1="'+(y0+r*CH)+'" x2="'+(x0+w)+'" y2="'+(y0+r*CH)+'" stroke="#fff" stroke-opacity="0.12"/>';
+  const kx=HOOPX-CW, kw=CW*2, kh=CH*2.6;
+  s+='<rect x="'+kx+'" y="'+y0+'" width="'+kw+'" height="'+kh+'" fill="#C8281E" fill-opacity="0.16" stroke="'+L+'" stroke-width="2.5" stroke-opacity="0.8"/>';
+  s+='<circle cx="'+HOOPX+'" cy="'+(y0+kh)+'" r="'+(CW*0.8)+'" fill="none" stroke="'+L+'" stroke-width="2.5" stroke-opacity="0.8"/>';
+  s+='<path d="M'+(HOOPX-168)+' '+(HOOPY+6)+' A168 168 0 0 1 '+(HOOPX+168)+' '+(HOOPY+6)+'" fill="none" stroke="'+L+'" stroke-width="2.5" stroke-opacity="0.7"/>';
+  // canestro
+  s+='<rect x="'+(HOOPX-40)+'" y="'+(HOOPY-23)+'" width="80" height="9" rx="2" fill="#fff" stroke="#8a3b10" stroke-width="1.5"/>';
+  s+='<rect x="'+(HOOPX-13)+'" y="'+(HOOPY-23)+'" width="26" height="16" fill="none" stroke="#E07B1E" stroke-width="2"/>';
+  s+='<ellipse id="rim" cx="'+HOOPX+'" cy="'+HOOPY+'" rx="17" ry="5" fill="none" stroke="#E07B1E" stroke-width="3.5"/>';
+  s+='<path id="net" d="M'+(HOOPX-15)+' '+HOOPY+' L'+(HOOPX-9)+' '+(HOOPY+20)+' M'+HOOPX+' '+(HOOPY+2)+' L'+HOOPX+' '+(HOOPY+24)+' M'+(HOOPX+15)+' '+HOOPY+' L'+(HOOPX+9)+' '+(HOOPY+20)+'" stroke="#fff" stroke-width="1.4" stroke-opacity="0.85" fill="none"/>';
+  return s;
+}
+function courtSVG(){
+  return '<svg id="court" viewBox="0 0 '+VW+' '+VH+'" xmlns="'+SVGNS+'" preserveAspectRatio="xMidYMid meet">'
+    + '<defs><linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D89A56"/><stop offset="1" stop-color="#B9742F"/></linearGradient>'
+    + '<clipPath id="floorclip"><rect x="'+MX+'" y="'+MY+'" width="'+(CW*COLS)+'" height="'+(CH*ROWS)+'" rx="6"/></clipPath></defs>'
+    + '<rect x="'+MX+'" y="'+MY+'" width="'+(CW*COLS)+'" height="'+(CH*ROWS)+'" rx="6" fill="url(#wood)"/>'
+    + '<image href="3.jpg" x="'+MX+'" y="'+MY+'" width="'+(CW*COLS)+'" height="'+(CH*ROWS)+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#floorclip)" opacity="0.28"/>'
+    + markings()
+    + '<g id="tokens"></g>'
+    + '<text id="court-pop" x="'+(VW/2)+'" y="'+(MY+CH*ROWS/2)+'" text-anchor="middle" class="court-pop"></text>'
+    + '</svg>';
+}
+function mkPlayer(num){
+  const g=el('g',{class:'tok player'});
+  g.appendChild(el('circle',{r:18, fill:'#C8281E', stroke:'#7c160e','stroke-width':2.5}));
+  g.appendChild(el('circle',{r:18, fill:'none', stroke:'#fff','stroke-width':1.5,'stroke-opacity':0.5}));
+  const t=el('text',{'text-anchor':'middle',y:6,'font-size':18,'font-weight':700,fill:'#fff','font-family':'Fredoka,sans-serif'}); t.textContent=num;
+  g.appendChild(t); return g;
+}
+function mkDef(){
+  const g=el('g',{class:'tok def'});
+  g.appendChild(el('circle',{r:18, fill:'#1F3A63', stroke:'#0e1d35','stroke-width':2.5}));
+  g.appendChild(el('path',{d:'M-7 -7 L7 7 M7 -7 L-7 7', stroke:'#9fb6d6','stroke-width':3,'stroke-linecap':'round'}));
+  return g;
+}
+function mkBall(){
+  const g=el('g',{class:'tok ball'});
+  g.appendChild(el('circle',{r:9, fill:'#E07B1E', stroke:'#8a3b10','stroke-width':1.5}));
+  g.appendChild(el('path',{d:'M-9 0 H9 M0 -9 V9 M-6.5 -6 Q0 0 -6.5 6 M6.5 -6 Q0 0 6.5 6', stroke:'#8a3b10','stroke-width':1,fill:'none'}));
+  return g;
+}
+function setPos(e,c,r){ e.style.transform='translate('+cx(c)+'px,'+cy(r)+'px)'; }
+function setXY(e,x,y){ e.style.transform='translate('+x+'px,'+y+'px)'; }
+
+function startFrame(lv, scen){
+  const players={}; for(const id in lv.players){ players[id]={c:lv.players[id][0], r:lv.players[id][1]}; }
+  let src=lv.defenders||[]; if(scen&&scen.defs) src=scen.defs.map(d=>({pos:d}));
+  const defs=src.map(d=>({c:(d.patrol?d.patrol[0][0]:d.pos[0]), r:(d.patrol?d.patrol[0][1]:d.pos[1])}));
+  return {players, defs, ball:lv.ball, scored:0, ticks:0, mark:'start'};
+}
+function buildCourt(f){
+  $('#stage').innerHTML=courtSVG();
+  const g=$('#court').querySelector('#tokens');
+  g.classList.add('noanim');
+  tok={players:{}, defs:[], ball:null};
+  for(const id in f.players){ const t=mkPlayer(id.replace('p','')); g.appendChild(t); tok.players[id]=t; setPos(t,f.players[id].c,f.players[id].r); }
+  f.defs.forEach(d=>{ const t=mkDef(); g.appendChild(t); tok.defs.push(t); setPos(t,d.c,d.r); });
+  const b=mkBall(); g.appendChild(b); tok.ball=b; const c=f.players[f.ball]; setXY(b, cx(c.c)+13, cy(c.r)-15);
+  void g.getBoundingClientRect();
+  requestAnimationFrame(()=>g.classList.remove('noanim'));
+  updateScore(f.scored||0);
+}
+function drawFrame(f){
+  updateScore(f.scored||0);
+  for(const id in tok.players){ const p=f.players[id]; if(p) setPos(tok.players[id], p.c, p.r); }
+  f.defs.forEach((d,i)=>{ if(tok.defs[i]) setPos(tok.defs[i], d.c, d.r); });
+  if(f.mark==='shoot'){ setXY(tok.ball, HOOPX, HOOPY); if(f.made) swish(); }
+  else { const c=f.players[f.ball]; if(c) setXY(tok.ball, cx(c.c)+13, cy(c.r)-15); }
+}
+function updateScore(n){ const s=$('#score'); if(s) s.textContent=(n||0)+' / '+curTargets; }
+function swish(){
+  const c=$('#court'); if(!c) return;
+  const rim=c.querySelector('#rim'); if(rim){ rim.setAttribute('stroke','#39c46a'); setTimeout(()=>{ if(rim) rim.setAttribute('stroke','#E07B1E'); },450); }
+  const pop=c.querySelector('#court-pop'); if(pop){ pop.textContent='CANESTRO!'; pop.classList.add('show'); setTimeout(()=>pop.classList.remove('show'),780); }
+}
+
+// ===== AUDIO (WebAudio) =====
+let AC=null;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tono(freq,dur,tipo,vol,t0){ const a=ac(); if(!a) return; const o=a.createOscillator(),g=a.createGain(); o.type=tipo||'sine'; o.frequency.value=freq; const t=t0||a.currentTime; g.gain.setValueAtTime(vol||0.08,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur); }
+function bounce(){ tono(150,0.10,'sine',0.16); }
+function whoosh(){ const a=ac(); if(!a) return; tono(520,0.10,'triangle',0.10); tono(700,0.09,'triangle',0.07,a.currentTime+0.05); }
+function tweet(){ tono(1700,0.12,'square',0.06); }
+function swishSound(){ const a=ac(); if(!a) return; const n=a.createBufferSource(),buf=a.createBuffer(1,4000,a.sampleRate),d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length); n.buffer=buf; const g=a.createGain(); g.gain.value=0.10; const f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=1400; n.connect(f); f.connect(g); g.connect(a.destination); n.start(); tono(880,0.14,'sine',0.07,a.currentTime+0.02); }
+function buzz(){ tono(150,0.32,'sawtooth',0.10); }
+function fanfara(){ const a=ac(); if(!a) return; const seq=[[523,0],[659,0.12],[784,0.24],[1046,0.40]]; seq.forEach(([f,t])=>tono(f,0.26,'triangle',0.12,a.currentTime+t)); }
+
+// ===== MASCOTTE Coach Bruno =====
+function coachAv(size){ size=size||50; return '<img class="coach-av" src="bruno.jpg" width="'+size+'" height="'+size+'" alt="Coach Bruno" onerror="this.style.background=\'#C8281E\'">'; }
+
+// ===== PREMI (livelli premio: testi e mappe concettuali) =====
+const PREMI_SOGLIA=[4,8,12];
+const PREMI=[
+  { titolo:'Le regole del gioco', occhiello:'premio · dopo la zona Riscaldamento', img:'ball.jpg',
+    intro:'Hai scaldato i motori! Prima di andare avanti, fermati a <strong>riconoscere le regole</strong>: nel basket e nel coding si vince rispettandole, una alla volta.',
+    cmap:{ centro:'LE REGOLE', rami:[
+      {h:'Un\'azione alla volta', p:'Il giocatore esegue un comando per volta, nell\'ordine in cui glielo dai. Anche tu scrivi una riga alla volta.'},
+      {h:'L\'ordine conta', p:'Prima palleggi, poi passi, poi tiri: cambiare l\'ordine cambia la giocata. In codice questa è la sequenza.'},
+      {h:'Dentro il campo', p:'Non si esce dalle linee e non si attraversano gli avversari: sono i limiti dentro cui costruire l\'azione.'} ]},
+    testo:'<strong>Riconoscere la regola</strong> è il primo passo del pensiero computazionale: capire cosa si può e cosa non si può fare, e costruire la soluzione dentro quei limiti.' },
+  { titolo:'Le strategie vincenti', occhiello:'premio · dopo la zona Squadra', img:'sacrafamigliabasket.jpg',
+    intro:'La squadra ti segue: ora pensi da <strong>coach</strong>. Una strategia non è fortuna, è un piano fatto di tre mosse di pensiero.',
+    cmap:{ centro:'LE STRATEGIE', rami:[
+      {h:'Sequenza', p:'Metti le azioni nell\'ordine giusto: è lo schema base di ogni giocata che porta a canestro.'},
+      {h:'Ripetizione · repeat', p:'Quando un movimento si ripete, non riscriverlo: usa un ciclo. Meno mosse, gioco più pulito.'},
+      {h:'Decisione · if', p:'Leggi la difesa: se il tiro è libero tiri, se è coperto passi. La condizione sceglie al posto tuo.'} ]},
+    testo:'Un buon coach non improvvisa: <strong>scompone</strong> il problema, <strong>riconosce</strong> gli schemi che si ripetono e <strong>decide</strong> in base a ciò che vede in campo. Sono le stesse strategie del programmatore.' },
+  { titolo:'Il fair play', occhiello:'premio · dopo la zona Schemi', img:'bruno.jpg',
+    intro:'«Coach, ricordatelo» dice Bruno. «Si gioca per vincere, ma <strong>prima ancora si gioca con correttezza</strong>. Senza fair play non c\'è sport.»',
+    valori:[
+      {h:'Rispetto dell\'avversario', p:'Gli avversari non sono nemici: senza di loro non ci sarebbe partita. Si rispettano sempre, dentro e fuori dal campo.'},
+      {h:'Lealtà e regole', p:'Si vince seguendo le regole, mai aggirandole. Una vittoria ottenuta con l\'inganno non vale niente.'},
+      {h:'La squadra prima di tutto', p:'Passare la palla al compagno meglio piazzato vale più di un tiro egoista. Insieme si arriva a canestro.'},
+      {h:'Accettare il risultato', p:'Si stringe la mano vincendo e perdendo. Dalla sconfitta si impara la mossa di domani.'} ],
+    testo:'La <strong>correttezza nello sport</strong> è la stessa onestà che serve nella vita: dare il massimo, rispettare gli altri e giocare pulito. Questo è il vero trofeo del campionato.' }
+];
+function premioSbloccato(i){ if(docente) return true; for(let id=1; id<=PREMI_SOGLIA[i]; id++){ if(!stelleLivello[id]) return false; } return true; }
+function medagliaSVG(){ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.8 6.2 20.3l1.6-6.6L2.6 9.3l6.8-.5z" fill="#fff"/></svg>'; }
+function lucchPremio(){ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2" fill="none" stroke="#fff" stroke-width="2"/><rect x="5" y="10" width="14" height="10" rx="2" fill="#fff"/></svg>'; }
+function apriPremio(i){
+  const p=PREMI[i];
+  $('#premio-titolo').textContent=p.titolo;
+  let h='<div class="premio-hero"><img src="'+p.img+'" alt="" onerror="this.style.display=\'none\'"><div><div class="occhiello-pr">'+p.occhiello+'</div><h2>'+p.titolo+'</h2><p>'+p.intro+'</p></div></div>';
+  if(p.cmap){
+    h+='<div class="cmap"><div class="cmap-centro">'+p.cmap.centro+'</div><div class="cmap-link"></div><div class="cmap-rami">';
+    p.cmap.rami.forEach(r=>{ h+='<div class="cmap-ramo"><h4>'+r.h+'</h4><p>'+r.p+'</p></div>'; });
+    h+='</div></div>';
+  }
+  if(p.valori){
+    h+='<div class="valori-griglia">';
+    p.valori.forEach(v=>{ h+='<div class="valore"><h4>'+v.h+'</h4><p>'+v.p+'</p></div>'; });
+    h+='</div>';
+  }
+  h+='<div class="premio-testo">'+p.testo+'</div>';
+  h+='<div class="premio-pie"><button class="btn-big" style="margin-top:0;padding:11px 28px" id="btn-premio-torna">Torna al campionato</button></div>';
+  $('#premio-inner').innerHTML=h;
+  $('#btn-premio-torna').onclick=()=>{ buildMappa(); show('#mappa'); };
+  show('#premio');
+}
+
+// ===== STRATO NARRATIVO: la stagione di Coach! =====
+const ZONE_INFO={
+  'Riscaldamento':{ img:'6.jpg', pos:'50% 62%', cap:'Capitolo 1 · Si comincia', racconto:'Primo giorno al campo della Sacra Famiglia. Coach, fai scaldare i tuoi giocatori: una mossa alla volta.' },
+  'Squadra':{ img:'7.jpg', pos:'50% 40%', cap:'Capitolo 2 · Lo spogliatoio', racconto:'La squadra è al completo. Impara a muovere i compagni e a far girare la palla: da soli non si vince.' },
+  'Schemi':{ img:'4.jpg', pos:'50% 100%', cap:'Capitolo 3 · La lavagnetta', racconto:'Coach Bruno apre la lavagnetta. È il tempo degli schemi: ripeti le giocate e leggi la difesa.' },
+  'Partita':{ img:'5.jpg', pos:'50% 50%', cap:'Capitolo 4 · Game day', racconto:'Si accendono le luci. Difensori in movimento e finestre di passaggio: porta la Sacra Famiglia al titolo.' }
+};
+function zonaBanner(z,zi){
+  const info=ZONE_INFO[z]; if(!info) return '';
+  return '<div class="zona-banner"><img src="'+info.img+'" alt="" style="object-position:'+info.pos+'" onerror="this.parentNode.style.display=\'none\'">'+
+    '<div class="vela"><div class="capitolo">'+info.cap+'</div><div class="racconto">'+info.racconto+'</div></div></div>';
+}
+
+// ===== MAPPA / CAMPIONATO =====
+function buildMappa(){
+  const box=$('#zone'); box.innerHTML='';
+  const zone=[]; const seen={};
+  LEVELS.forEach(lv=>{ if(!seen[lv.zona]){ seen[lv.zona]=true; zone.push(lv.zona); } });
+  zone.forEach((z,zi)=>{
+    const lvs=LEVELS.filter(l=>l.zona===z);
+    const card=document.createElement('div'); card.className='zona';
+    let h=zonaBanner(z,zi)+'<div class="zona-titolo"><span class="zona-num">Zona '+(zi+1)+'</span> '+z+'</div><div class="zona-griglia">';
+    lvs.forEach(lv=>{
+      const sbloccato = docente || lv.id<=maxSbloccato;
+      const completato = stelleLivello[lv.id]>0;
+      const corrente = sbloccato && !completato && lv.id===maxSbloccato;
+      const gg=stelleLivello[lv.id]||0;
+      h+='<div class="nodo'+(sbloccato?'':' bloccato')+(completato?' completato':'')+(corrente?' corrente':'')+'" data-lv="'+lv.id+'">';
+      h+='<div class="palla">';
+      if(sbloccato) h+=lv.id; else h+='<svg class="lucch" viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2" fill="none" stroke="#fff" stroke-width="2"/><rect x="5" y="10" width="14" height="10" rx="2" fill="#fff"/></svg>';
+      h+='</div>';
+      h+='<div class="nome">'+lv.nome+'</div>';
+      h+='<div class="stelline"><i class="'+(gg>=1?'on':'')+'"></i><i class="'+(gg>=2?'on':'')+'"></i><i class="'+(gg>=3?'on':'')+'"></i></div>';
+      h+='</div>';
+    });
+    h+='</div>';
+    card.innerHTML=h;
+    box.appendChild(card);
+  });
+  box.querySelectorAll('.nodo').forEach(n=>{
+    n.addEventListener('click',()=>{ const id=+n.getAttribute('data-lv'); if(docente||id<=maxSbloccato) apriLivello(id); });
+  });
+  // bacheca dei premi
+  const bac=document.createElement('div'); bac.className='bacheca';
+  let bh='<div class="zona-banner"><img src="8.jpg" alt="" style="object-position:50% 38%" onerror="this.parentNode.style.display=\'none\'"><div class="vela"><div class="capitolo">La bacheca dei trofei</div><div class="racconto">Ogni zona conquistata sblocca una pagina sui valori dello sport.</div></div></div>'+
+    '<div class="zona-titolo"><span class="zona-num">Premi</span> Lo spogliatoio dei valori</div><div class="premio-griglia">';
+  PREMI.forEach((p,i)=>{
+    const ok=premioSbloccato(i);
+    bh+='<div class="trofeo'+(ok?'':' bloccato')+'" data-premio="'+i+'">';
+    bh+='<div class="medaglia">'+(ok?medagliaSVG():lucchPremio())+'</div>';
+    bh+='<div class="tit-premio">'+p.titolo+'</div>';
+    bh+='<div class="sot-premio">'+(ok?'tocca per aprire':'completa la zona per sbloccare')+'</div>';
+    bh+='</div>';
+  });
+  bh+='</div>';
+  bac.innerHTML=bh;
+  box.appendChild(bac);
+  box.querySelectorAll('.trofeo').forEach(t=>{
+    t.addEventListener('click',()=>{ const i=+t.getAttribute('data-premio'); if(premioSbloccato(i)) apriPremio(i); });
+  });
+}
+
+// ===== LIVELLO =====
+function apriLivello(id){
+  livelloCorrente=id; curLevel=LEVELS[id-1]; curTargets=curLevel.targets||1;
+  show('#livello');
+  if(musicaOn && tracciaCorrente!==id-1) avviaTraccia(id-1);
+  $('#lv-titolo').textContent=id+'. '+curLevel.nome;
+  $('#lv-zona').textContent=curLevel.zona;
+  $('#lv-brief').innerHTML='<div class="parla"><span class="av">'+coachAv(50)+'</span><div><span class="nome-coach">Coach Bruno</span>'+curLevel.brief+'</div></div>'+
+    '<div class="fact"><strong>Sai che...</strong> '+curLevel.fact+'</div>';
+  const pal=$('#palette'); pal.innerHTML='<span class="eti-pal">comandi disponibili</span>';
+  const nuovi={repeat:1, if:1, wait:1};
+  curLevel.cmds.forEach(c=>{ const b=document.createElement('button'); b.className='chip-cmd'+(nuovi[c]?' nuovo':''); b.textContent=c; b.addEventListener('click',()=>insTesto(c+' ')); pal.appendChild(b); });
+  editorEl.value=''; aggiornaNumeri(); setFeedback('');
+  $('#btn-sol').style.display = docente ? '' : 'none';
+  buildCourt(startFrame(curLevel, (curLevel.scenarios&&curLevel.scenarios[0])||null));
+}
+function insTesto(t){ const e=editorEl,s=e.selectionStart,en=e.selectionEnd; e.value=e.value.slice(0,s)+t+e.value.slice(en); e.selectionStart=e.selectionEnd=s+t.length; e.focus(); aggiornaNumeri(); }
+function aggiornaNumeri(){ const n=editorEl.value.split('\n').length; let s=''; for(let i=1;i<=Math.max(n,1);i++) s+=i+'\n'; numeriEl.textContent=s; }
+function setFeedback(html,tipo){ const f=$('#feedback'); f.className='feedback'+(tipo?(' '+tipo):''); f.innerHTML=html||''; }
+
+// ===== ESECUZIONE =====
+function esegui(){
+  if(playing) return;
+  const lv=curLevel, src=editorEl.value;
+  let prog;
+  try{ prog=ENG.parseProgram(src); }
+  catch(e){ setFeedback('<strong>Riga '+(e.line||'?')+':</strong> '+e.message,'rosso'); buzz(); return; }
+  const scens=lv.scenarios||[null];
+  let minStars=99, best=null;
+  for(let si=0; si<scens.length; si++){
+    let st;
+    try{ st=ENG.runProgram(lv, prog, scens[si]); }
+    catch(e){
+      const frames=e.state && e.state.frames;
+      const msg='<strong>Riga '+(e.line||'?')+':</strong> '+e.message;
+      if(frames && frames.length>1) playFrames(frames, ()=>{ setFeedback(msg,'rosso'); buzz(); });
+      else { buildCourt(startFrame(lv, scens[si])); setFeedback(msg,'rosso'); buzz(); }
+      return;
+    }
+    if(st.scored < st.targets){
+      const msg='<strong>Quasi!</strong> Hai segnato '+st.scored+' canestri su '+st.targets+'. '+(st.targets>1?'Servono tutti per chiudere la partita.':'Riprova a portare la palla a canestro.');
+      playFrames(st.frames, ()=>{ setFeedback(msg,'rosso'); buzz(); });
+      return;
+    }
+    const s=ENG.stars(lv, st);
+    if(s<minStars){ minStars=s; best=st; }
+  }
+  playFrames(best.frames, ()=>finale(lv, minStars, best));
+}
+function playFrames(frames, done){
+  playing=true; $('#btn-esegui').disabled=true;
+  buildCourt(frames[0]);
+  const dur = frames.length<=6?640:(frames.length<=12?500:380);
+  let i=0;
+  function step(){
+    i++;
+    if(i>=frames.length){ playing=false; $('#btn-esegui').disabled=false; done&&done(); return; }
+    const fr=frames[i];
+    drawFrame(fr);
+    if(fr.mark==='dribble'||fr.mark==='move') bounce();
+    else if(fr.mark==='pass') whoosh();
+    else if(fr.mark==='shoot'){ if(fr.made) swishSound(); }
+    else if(fr.mark==='wait') tweet();
+    setTimeout(step, dur);
+  }
+  setTimeout(step, dur);
+}
+function finale(lv, stelle, st){
+  if(!stelleLivello[lv.id] || stelleLivello[lv.id]<stelle) stelleLivello[lv.id]=stelle;
+  if(lv.id===maxSbloccato && maxSbloccato<16) maxSbloccato++;
+  fanfara();
+  mostraVittoria(lv, stelle, st);
+}
+function mostraVittoria(lv, stelle, st){
+  const sc=$('#scheda-vittoria');
+  let palle='';
+  for(let i=0;i<3;i++) palle+='<svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="'+(i<stelle?'#E07B1E':'#D8CDB8')+'" stroke="'+(i<stelle?'#A8540C':'#BBB199')+'" stroke-width="2"/><path d="M3 20 H37 M20 3 V37 M8 8 Q20 20 8 32 M32 8 Q20 20 32 32" fill="none" stroke="'+(i<stelle?'#8a3b10':'#A59A82')+'" stroke-width="1.4" opacity="0.7"/></svg>';
+  const next=lv.id+1;
+  const cod=(next<=16)? codiceDi(next) : null;
+  let frase;
+  if(lv.id===16) frase='Campionato vinto, coach! La tua squadra ha imparato a muoversi, passare e leggere il gioco — perche\' gliel\'hai insegnato tu, un comando alla volta.';
+  else if(stelle===3) frase='Schema perfetto! Mossa dopo mossa, neanche una di troppo. Sei un vero coach.';
+  else frase='Canestro! La squadra ha segnato. Prova a rifarlo con meno mosse per le tre palle d\'oro.';
+  let h='';
+  if(lv.id===16) h+='<img src="8.jpg" alt="Premiazione" class="vittoria-trofeo" onerror="this.style.display=\'none\'">';
+  h+='<h2>'+lv.nome+'</h2>';
+  h+='<div class="stelle-box">'+palle+'</div>';
+  h+='<div class="parla parla-vittoria"><span class="av">'+coachAv(48)+'</span><div><span class="nome-coach">Coach Bruno</span>'+frase+'</div></div>';
+  h+='<div class="dato-vittoria"><span>Mosse usate</span><strong>'+st.ticks+'</strong></div>';
+  h+='<div class="dato-vittoria"><span>Schema perfetto (3 palle)</span><strong>'+lv.par.three+' mosse</strong></div>';
+  h+='<div class="fact"><strong>Sai che...</strong> '+lv.fact+'</div>';
+  if(cod) h+='<div class="codice-vittoria">Codice per la prossima partita<div class="parola">'+cod+'</div></div>';
+  else h+='<div class="codice-vittoria">Hai vinto il campionato!<div class="parola">COACH</div></div>';
+  const premioIdx=PREMI_SOGLIA.indexOf(lv.id);
+  const premioOk = premioIdx>=0 && premioSbloccato(premioIdx);
+  if(premioOk) h+='<div class="codice-vittoria" style="background:var(--arancio-scuro)">Hai sbloccato un premio!<div class="parola" style="font-size:1.1rem;letter-spacing:.03em">'+PREMI[premioIdx].titolo+'</div></div>';
+  h+='<div class="riga-bottoni"><button class="btn-sec" id="vit-rigioca">Rigioca</button><button class="btn-sec" id="vit-mappa">Campionato</button>';
+  if(premioOk) h+='<button class="btn-sec" id="vit-premio" style="border-color:var(--oro);color:var(--arancio-scuro)">Apri il premio</button>';
+  if(next<=16) h+='<button class="btn-big" style="margin-top:0;padding:12px 26px" id="vit-next">Prossima partita</button>';
+  h+='</div>';
+  sc.innerHTML=h;
+  $('#overlay-vittoria').classList.add('attiva');
+  $('#vit-rigioca').onclick=()=>{ $('#overlay-vittoria').classList.remove('attiva'); apriLivello(lv.id); };
+  $('#vit-mappa').onclick=()=>{ $('#overlay-vittoria').classList.remove('attiva'); buildMappa(); show('#mappa'); };
+  if($('#vit-premio')) $('#vit-premio').onclick=()=>{ $('#overlay-vittoria').classList.remove('attiva'); apriPremio(premioIdx); };
+  if($('#vit-next')) $('#vit-next').onclick=()=>{ $('#overlay-vittoria').classList.remove('attiva'); apriLivello(next); };
+}
+
+// ===== CODICI / COACH MODE =====
+function provaCodice(){
+  const v=$('#input-codice').value.trim().toUpperCase();
+  for(let id=2; id<=16; id++){ if(codiceDi(id)===v){ if(id>maxSbloccato) maxSbloccato=id; buildMappa(); apriLivello(id); $('#input-codice').value=''; return; } }
+  $('#input-codice').value=''; $('#input-codice').placeholder='codice non valido';
+}
+let tapLogo=0, tapTimer=null;
+function tapPalla(){
+  tapLogo++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>tapLogo=0,1200);
+  if(tapLogo>=5){ tapLogo=0; docente=!docente; $('#badge-docente').style.display=docente?'inline-block':'none'; if(docente) maxSbloccato=16; buildMappa(); $('#btn-sol').style.display=(docente && $('#livello').classList.contains('attiva'))?'':'none'; }
+}
+
+// ===== GUIDA =====
+function apriGuida(){
+  $('#scheda-guida').innerHTML='<h2>Come si allena la squadra</h2>'+
+   '<p>Sei il <strong>coach</strong>: non giochi tu, ma scrivi i comandi in inglese che la squadra esegue. Gli avversari (le pedine blu con la X) ti sbarrano la strada. Porta la palla a canestro e <strong>segna</strong>.</p>'+
+   '<h3>I comandi (linguaggio PLAY)</h3>'+
+   '<div class="codeblock">dribble up     palleggia di un passo (up/down/left/right)\nmove p2 left   sposta un compagno SENZA palla\npass p2        passa la palla a un compagno\nshoot          tira a canestro\nwait           aspetta un istante (i difensori si muovono)\nrepeat 3       ripeti 3 volte (rientra di 2 spazi)\n  dribble up\nif open        se il tiro e\' libero...\n  shoot\nif blocked     se il tiro e\' stoppato...\n  pass p2\nif clear p2    se la linea verso p2 e\' sgombra...</div>'+
+   '<h3>Le tre palle d\'oro</h3>'+
+   '<p>Ogni canestro vale almeno una palla. Per le <strong>tre palle d\'oro</strong> devi segnare con il <strong>minor numero di mosse</strong>: niente passi sprecati. Attenzione: se vai addosso a un avversario perdi la palla, e un difensore sulla linea stoppa il tiro o intercetta il passaggio.</p>'+
+   '<div class="riga-bottoni"><button class="btn-big" style="margin-top:0;padding:10px 24px" id="chiudi-guida">Ho capito, coach!</button></div>';
+  $('#overlay-guida').classList.add('attiva');
+  $('#chiudi-guida').onclick=()=>$('#overlay-guida').classList.remove('attiva');
+}
+
+// ===== MUSICA =====
+const MUSICHE=['jfKfPfyJRdk','5qap5aO4i9A','DWcJFNfaw9c','lTRiuFIWV54','rUxyKA_-grg','HuFYqnbVbzY'];
+let musicaOn=false, tracciaCorrente=-1, wrapMusica=null;
+function iconaMusica(on){ const c=on?'#C8281E':'#FFFFFF'; let s='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.2 14.2 V4.6 L14 3 v9.4" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="4.4" cy="14.2" rx="2.1" ry="1.7" fill="'+c+'"/><ellipse cx="12.2" cy="12.4" rx="2.1" ry="1.7" fill="'+c+'"/>'; if(!on) s+='<line x1="2" y1="16" x2="16" y2="2" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round"/>'; return s+'</svg>'; }
+function avviaTraccia(n){ if(!wrapMusica){ wrapMusica=document.createElement('div'); wrapMusica.style.cssText='position:fixed;left:-9999px;top:0;width:220px;height:124px;overflow:hidden'; document.body.appendChild(wrapMusica); } const id=MUSICHE[((n%MUSICHE.length)+MUSICHE.length)%MUSICHE.length]; wrapMusica.innerHTML='<iframe width="220" height="124" src="https://www.youtube.com/embed/'+id+'?rel=0&playsinline=1&enablejsapi=1&autoplay=1&loop=1&playlist='+id+'" frameborder="0" allow="autoplay; encrypted-media"></iframe>'; tracciaCorrente=n; }
+function fermaMusica(){ if(wrapMusica) wrapMusica.innerHTML=''; tracciaCorrente=-1; }
+function aggiornaBtnMusica(){ $$('.btn-musica').forEach(b=>{ b.classList.toggle('on',musicaOn); b.innerHTML=iconaMusica(musicaOn); b.title=musicaOn?'musica: accesa':'musica: spenta'; }); }
+function toggleMusica(){ musicaOn=!musicaOn; if(musicaOn){ const inLv=$('#livello').classList.contains('attiva'); avviaTraccia(inLv? livelloCorrente-1 : 0); } else fermaMusica(); aggiornaBtnMusica(); }
+
+// ===== INIT =====
+function init(){
+  $('#splash-av').innerHTML=coachAv(58);
+  editorEl=$('#codice'); numeriEl=$('#numeri');
+  editorEl.addEventListener('input',aggiornaNumeri);
+  editorEl.addEventListener('scroll',()=>{ numeriEl.scrollTop=editorEl.scrollTop; });
+  editorEl.addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); insTesto('  '); } });
+  $('#btn-esegui').addEventListener('click',()=>{ ac(); esegui(); });
+  $('#btn-reset').addEventListener('click',()=>{ editorEl.value=''; aggiornaNumeri(); setFeedback(''); buildCourt(startFrame(curLevel,(curLevel.scenarios&&curLevel.scenarios[0])||null)); });
+  $('#btn-guida').addEventListener('click',apriGuida);
+  $('#btn-sol').addEventListener('click',()=>{ editorEl.value=curLevel.sol; aggiornaNumeri(); });
+  $('#btn-mappa-da-lv').addEventListener('click',()=>{ buildMappa(); show('#mappa'); });
+  $('#btn-premio-mappa').addEventListener('click',()=>{ buildMappa(); show('#mappa'); });
+  $('#btn-gioca').addEventListener('click',()=>{ ac(); buildMappa(); show('#mappa'); });
+  $('#btn-codice').addEventListener('click',provaCodice);
+  $('#input-codice').addEventListener('keydown',e=>{ if(e.key==='Enter') provaCodice(); });
+  $('#logo-ball').addEventListener('click',tapPalla);
+  $('#logo-ball2').addEventListener('click',tapPalla);
+  $('#btn-docente').addEventListener('click',()=>{ location.href='basket-docenti.html'; });
+  $$('.btn-musica').forEach(b=>b.addEventListener('click',toggleMusica)); aggiornaBtnMusica();
+  const m=location.search.match(/livello=(\d+)/);
+  if(m){ const id=Math.max(1,Math.min(16,+m[1])); maxSbloccato=Math.max(maxSbloccato,id); buildMappa(); apriLivello(id); }
+}
+if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+</body>
+</html>
