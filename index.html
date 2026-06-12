@@ -41,12 +41,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .spazio{flex:1}
 
 /* ===== SPLASH ===== */
-#splash{align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 18%,#E89B4F 0%,#C8884B 38%,#8a4f22 100%)}
-#splash .pannello{position:relative;background:rgba(28,16,8,.62);border:2px solid rgba(255,255,255,.18);border-radius:22px;padding:26px 30px;max-width:760px;text-align:left}
-.hero-img{display:block;width:100%;max-height:300px;object-fit:cover;border-radius:16px;border:3px solid rgba(255,255,255,.28);box-shadow:0 10px 26px rgba(0,0,0,.4);margin-bottom:16px}
-#splash .occhiello{color:#FFD9A8;font-family:'Fredoka',sans-serif;font-size:1.02rem;margin-bottom:2px;letter-spacing:.02em}
-#splash h1{font-size:clamp(2.1rem,6vw,3.4rem);color:#fff;font-weight:700;text-shadow:0 3px 0 rgba(0,0,0,.35)}
-#splash p{color:#F4E7D6;margin-top:12px;line-height:1.5}
+#splash{align-items:center;justify-content:center;text-align:center;padding:20px;background:radial-gradient(circle at 50% 18%,#E89B4F 0%,#C8884B 38%,#8a4f22 100%)}
+#splash .pannello{position:relative;background:rgba(28,16,8,.62);border:2px solid rgba(255,255,255,.18);border-radius:22px;width:100%;max-width:1040px;text-align:left}
+.splash-ball{position:absolute;right:-22px;bottom:-26px;width:clamp(150px,22vw,270px);aspect-ratio:1;border-radius:26px;overflow:hidden;transform:rotate(-7deg);box-shadow:0 10px 22px rgba(0,0,0,.5);border:3px solid rgba(255,255,255,.55);pointer-events:none;z-index:4}
+.splash-ball img{width:128%;height:128%;object-fit:cover;object-position:center;display:block;margin:-14% 0 0 -14%}
+.hero{position:relative;display:block;border-radius:20px 20px 0 0;overflow:hidden;border-bottom:3px solid rgba(255,255,255,.22)}
+.hero-img{display:block;width:100%;height:auto}
+.hero-overlay{position:absolute;left:0;right:0;top:0;padding:22px 30px 56px;background:linear-gradient(to bottom,rgba(20,10,4,.72) 0%,rgba(20,10,4,.38) 55%,transparent 100%);pointer-events:none}
+#splash .hero-body{padding:6px 30px 26px}
+#splash .occhiello{color:#FFD9A8;font-family:'Fredoka',sans-serif;font-size:1.02rem;margin-bottom:2px;letter-spacing:.02em;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+#splash h1{font-size:clamp(2.4rem,7vw,4rem);color:#fff;font-weight:700;text-shadow:0 2px 10px rgba(0,0,0,.65),0 3px 0 rgba(0,0,0,.3)}
+#splash p{color:#F4E7D6;margin-top:16px;line-height:1.5}
 .splash-coach{display:flex;align-items:center;gap:12px;margin:16px 0 4px}
 .splash-coach .av{flex:none}
 .splash-coach .fumetto{position:relative;background:rgba(255,255,255,.96);color:#5A1410;border-radius:14px;padding:10px 14px;font-size:.95rem;line-height:1.45}
@@ -71,7 +76,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 /* ===== MAPPA ===== */
 #mappa{background:var(--sabbia)}
 .mappa-corpo{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:0 0 18px}
-.banner-int{width:100%;max-height:140px;object-fit:cover;display:block;border-bottom:4px solid var(--rosso)}
+.banner-int{width:100%;max-height:240px;object-fit:cover;object-position:50% 72%;display:block;border-bottom:4px solid var(--rosso)}
 .mappa-inner{width:min(1000px,100%);padding:16px;display:flex;flex-direction:column;gap:16px}
 .zona{background:#fff;border:2px solid var(--bordo);border-radius:18px;padding:14px 16px;box-shadow:0 6px 18px rgba(120,70,30,.10)}
 .zona-titolo{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;font-weight:700;color:var(--rosso-scuro);font-size:1.05rem;margin-bottom:12px}
@@ -228,9 +233,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 <!-- ===== SPLASH ===== -->
 <div class="screen attiva" id="splash">
   <div class="pannello">
-    <img src="2.jpg" alt="Coach! il coding del basket" class="hero-img" onerror="this.style.display='none'">
-    <div class="occhiello">serie del coding &middot; gioco 4</div>
-    <h1>Coach!</h1>
+    <div class="hero">
+      <img src="2.jpg" alt="Coach! il coding del basket" class="hero-img" onerror="this.style.display='none'">
+      <div class="hero-overlay">
+        <div class="occhiello">serie del coding &middot; gioco 4</div>
+        <h1>Coach!</h1>
+      </div>
+    </div>
+    <div class="hero-body">
     <p>Sei l'allenatore della squadra. Non scendi in campo tu: <strong>istruisci i tuoi giocatori</strong> scrivendo i comandi giusti, schivi gli avversari e organizzi i tiri a canestro.</p>
     <div class="splash-coach">
       <span class="av" id="splash-av"></span>
@@ -241,6 +251,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
       <img src="logoscuolarosso.jpg" alt="Scuola Sacra Famiglia" onerror="this.style.display='none'">
       <div class="cr"><strong>Scuola Sacra Famiglia</strong> &middot; Orzinuovi (BS)<br>&copy; 2026 Andrea Cerioli &mdash; Animatore Digitale<br>Serie del coding &middot; gioco 4</div>
     </div>
+    </div>
+    <span class="splash-ball"><img src="sacrafamigliabasket.jpg" alt="Pallone Sacra Famiglia" onerror="this.parentNode.style.display='none'"></span>
   </div>
 </div>
 
