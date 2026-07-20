@@ -276,6 +276,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
     <span class="badge-docente" id="badge-docente">modalità coach</span>
     <span class="spazio"></span>
     <button class="btn-musica" aria-label="musica on/off" title="musica"></button>
+    <button class="btn-testa" id="btn-canestro" title="Canestro in Laboratorio">Canestro</button>
     <button class="btn-testa" id="btn-docente">Per il docente</button>
   </div>
   <div class="mappa-corpo">
@@ -1109,11 +1110,50 @@ function apriGuida(){
 }
 
 // ===== MUSICA =====
-const MUSICHE=['jfKfPfyJRdk','5qap5aO4i9A','DWcJFNfaw9c','lTRiuFIWV54','rUxyKA_-grg','HuFYqnbVbzY'];
-let musicaOn=false, tracciaCorrente=-1, wrapMusica=null;
+// Colonna sonora lofi generata in tempo reale con WebAudio (zero dipendenze
+// esterne: niente YouTube/embed, adatto a minori, funziona anche offline).
+// I precedenti ID puntavano a live stream lofi -> "registrazione non disponibile".
+let musicaOn=false, tracciaCorrente=-1;
+let musBus=null, musTimer=null, musNext=0, musStep=0, musProg=0;
+const MIDIf=m=>440*Math.pow(2,(m-69)/12);
+// una progressione (4 accordi) per "traccia": [basso, 3 note della triade] in MIDI
+const PROG=[
+  [[45,57,60,64],[41,53,57,60],[43,55,59,62],[40,52,55,59]], // Am F  G  E
+  [[48,60,64,67],[45,57,60,64],[50,62,65,69],[43,55,59,62]], // C  Am Dm G
+  [[41,53,57,60],[48,60,64,67],[45,57,60,64],[43,55,59,62]], // F  C  Am G
+  [[38,50,53,57],[43,55,58,62],[45,57,60,64],[40,52,55,59]], // Dm G  Am E
+  [[45,57,60,64],[50,62,65,69],[43,55,59,62],[48,60,64,67]], // Am Dm G  C
+  [[40,52,55,59],[45,57,60,64],[41,53,57,60],[43,55,59,62]]  // Em Am F  G
+];
+function musNota(freq,t,dur,tipo,vol,atk,rel){ const a=ac(); if(!a||!musBus) return; const o=a.createOscillator(),g=a.createGain(); o.type=tipo; o.frequency.value=freq; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+atk); g.gain.setValueAtTime(vol,t+Math.max(atk,dur-rel)); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(musBus); o.start(t); o.stop(t+dur+0.05); }
+function musKick(t){ const a=ac(); if(!a||!musBus) return; const o=a.createOscillator(),g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(45,t+0.12); g.gain.setValueAtTime(0.075,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.18); o.connect(g); g.connect(musBus); o.start(t); o.stop(t+0.2); }
+function musHat(t){ const a=ac(); if(!a||!musBus) return; const n=a.createBufferSource(),buf=a.createBuffer(1,900,a.sampleRate),d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length); n.buffer=buf; const f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=7000; const g=a.createGain(); g.gain.setValueAtTime(0.016,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); n.connect(f); f.connect(g); g.connect(musBus); n.start(t); }
+function musSchedula(){
+  const a=ac(); if(!a||!musBus) return;
+  const stepDur=0.36, arp=[1,0,1,1,0,1,1,0];
+  while(musNext < a.currentTime+0.3){
+    const s=musStep%8, t=musNext;
+    const prog=PROG[((musProg%PROG.length)+PROG.length)%PROG.length];
+    const acc=prog[Math.floor(musStep/8)%4];
+    if(s===0){
+      const dur=stepDur*8;
+      musNota(MIDIf(acc[0]),t,dur*0.98,'triangle',0.055,0.06,0.5);           // basso
+      for(let k=1;k<acc.length;k++) musNota(MIDIf(acc[k]),t,dur*0.98,'sine',0.04,0.5,0.7); // pad
+    }
+    if(arp[s]){ const seq=[acc[1],acc[2],acc[3],acc[2],acc[3],acc[2],acc[1]+12,acc[3]]; musNota(MIDIf(seq[s]+12),t,stepDur*1.3,'triangle',0.028,0.02,0.12); }
+    if(s===0||s===4) musKick(t);
+    if(s%2===1) musHat(t);
+    musNext+=stepDur; musStep++;
+  }
+}
 function iconaMusica(on){ const c=on?'#C8281E':'#FFFFFF'; let s='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.2 14.2 V4.6 L14 3 v9.4" fill="none" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="4.4" cy="14.2" rx="2.1" ry="1.7" fill="'+c+'"/><ellipse cx="12.2" cy="12.4" rx="2.1" ry="1.7" fill="'+c+'"/>'; if(!on) s+='<line x1="2" y1="16" x2="16" y2="2" stroke="'+c+'" stroke-width="1.8" stroke-linecap="round"/>'; return s+'</svg>'; }
-function avviaTraccia(n){ if(!wrapMusica){ wrapMusica=document.createElement('div'); wrapMusica.style.cssText='position:fixed;left:-9999px;top:0;width:220px;height:124px;overflow:hidden'; document.body.appendChild(wrapMusica); } const id=MUSICHE[((n%MUSICHE.length)+MUSICHE.length)%MUSICHE.length]; wrapMusica.innerHTML='<iframe width="220" height="124" src="https://www.youtube.com/embed/'+id+'?rel=0&playsinline=1&enablejsapi=1&autoplay=1&loop=1&playlist='+id+'" frameborder="0" allow="autoplay; encrypted-media"></iframe>'; tracciaCorrente=n; }
-function fermaMusica(){ if(wrapMusica) wrapMusica.innerHTML=''; tracciaCorrente=-1; }
+function avviaTraccia(n){ const a=ac(); if(!a) return; tracciaCorrente=n; musProg=n; if(musBus) return; // già in play: cambia solo la progressione, transizione fluida
+  if(a.state==='suspended'){ try{ a.resume(); }catch(e){} }
+  const filt=a.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=2100; filt.Q.value=0.7;
+  musBus=a.createGain(); musBus.gain.setValueAtTime(0.0001,a.currentTime); musBus.gain.exponentialRampToValueAtTime(0.6,a.currentTime+1.6);
+  musBus.connect(filt); filt.connect(a.destination);
+  musStep=0; musNext=a.currentTime+0.15; musTimer=setInterval(musSchedula,60); }
+function fermaMusica(){ const a=ac(); if(musTimer){ clearInterval(musTimer); musTimer=null; } if(musBus&&a){ const t=a.currentTime; try{ musBus.gain.cancelScheduledValues(t); musBus.gain.setValueAtTime(Math.max(0.0001,musBus.gain.value),t); musBus.gain.exponentialRampToValueAtTime(0.0001,t+0.6); }catch(e){} const b=musBus; setTimeout(()=>{ try{ b.disconnect(); }catch(e){} },800); } musBus=null; tracciaCorrente=-1; }
 function aggiornaBtnMusica(){ $$('.btn-musica').forEach(b=>{ b.classList.toggle('on',musicaOn); b.innerHTML=iconaMusica(musicaOn); b.title=musicaOn?'musica: accesa':'musica: spenta'; }); }
 function toggleMusica(){ musicaOn=!musicaOn; if(musicaOn){ const inLv=$('#livello').classList.contains('attiva'); avviaTraccia(inLv? livelloCorrente-1 : 0); } else fermaMusica(); aggiornaBtnMusica(); }
 
@@ -1136,6 +1176,7 @@ function init(){
   $('#logo-ball').addEventListener('click',tapPalla);
   $('#logo-ball2').addEventListener('click',tapPalla);
   $('#btn-docente').addEventListener('click',()=>{ location.href='basket-docenti.html'; });
+  $('#btn-canestro').addEventListener('click',()=>{ location.href='gioco_canestro.html'; });
   $$('.btn-musica').forEach(b=>b.addEventListener('click',toggleMusica)); aggiornaBtnMusica();
   const m=location.search.match(/livello=(\d+)/);
   if(m){ const id=Math.max(1,Math.min(16,+m[1])); maxSbloccato=Math.max(maxSbloccato,id); buildMappa(); apriLivello(id); }
