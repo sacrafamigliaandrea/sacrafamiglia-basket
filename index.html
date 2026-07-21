@@ -276,7 +276,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
     <span class="badge-docente" id="badge-docente">modalità coach</span>
     <span class="spazio"></span>
     <button class="btn-musica" aria-label="musica on/off" title="musica"></button>
-    <button class="btn-testa" id="btn-canestro" title="Canestro in Laboratorio">Canestro</button>
     <button class="btn-testa" id="btn-docente">Per il docente</button>
   </div>
   <div class="mappa-corpo">
@@ -1176,7 +1175,6 @@ function init(){
   $('#logo-ball').addEventListener('click',tapPalla);
   $('#logo-ball2').addEventListener('click',tapPalla);
   $('#btn-docente').addEventListener('click',()=>{ location.href='basket-docenti.html'; });
-  $('#btn-canestro').addEventListener('click',()=>{ location.href='gioco_canestro.html'; });
   $$('.btn-musica').forEach(b=>b.addEventListener('click',toggleMusica)); aggiornaBtnMusica();
   const m=location.search.match(/livello=(\d+)/);
   if(m){ const id=Math.max(1,Math.min(16,+m[1])); maxSbloccato=Math.max(maxSbloccato,id); buildMappa(); apriLivello(id); }
